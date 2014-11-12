@@ -41,5 +41,5 @@ Feel free to fork/pull request.
 It'is not a official APP. Use it with moderation.
 
 >These documents may be freely distributed and used for non-commercial, scientific and educational purposes. 
->-- <cite>http://www.pnl.gov/notices.asp]</cite>
+>-- <cite>http://www.pnl.gov/notices.asp</cite>
 
