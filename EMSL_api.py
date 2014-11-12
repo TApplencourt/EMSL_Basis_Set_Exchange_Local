@@ -4,29 +4,39 @@
 """EMSL Api.
 
 Usage:
-  EMSL_api.py get_basis <db_path>
+  EMSL_api.py get_list_basis <db_path>
   EMSL_api.py get_list_elements <db_path> <basis_name>
   EMSL_api.py get_basis_data <db_path> <basis_name> <elts>...
-  EMSL_api.py create_db <db_path> <format> <contraction>
+  EMSL_api.py get_list_formats
+  EMSL_api.py create_db <db_path> <format> [--no-contraction]
   EMSL_api.py (-h | --help)
   EMSL_api.py --version
 
 Options:
-  -h --help     Show this screen.
-  --version     Show version.
+  -h --help         Show this screen.
+  --version         Show version.
+  --no-contraction  Basis functions are not contracted
+
+<db_path> is the path to the SQLite3 file containing the Basis sets.
 """
+
+version="0.1.1"
+
 
 import sys
 sys.path.append('./src/')
 
 from docopt import docopt
-from EMS_utility import EMSL_dump
-from EMS_utility import EMSL_local
+from EMSL_utility import EMSL_dump
+from EMSL_utility import format_dict
+from EMSL_utility import EMSL_local
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='EMSL Api 0.1')
 
-    if arguments["get_basis"]:
+    arguments = docopt(__doc__, version='EMSL Api '+version)
+    print arguments
+
+    if arguments["get_list_basis"]:
         db_path = arguments["<db_path>"]
 
         e = EMSL_local(db_path=db_path)
@@ -54,13 +64,21 @@ if __name__ == '__main__':
 
         l = e.get_basis(basis_name, elts)
         for i in l:
+            print i,'\n'
+
+    elif arguments["get_list_formats"]:
+        for i in format_dict:
             print i
 
     elif arguments["create_db"]:
         db_path = arguments["<db_path>"]
         format = arguments["<format>"]
-        contraction = arguments["<contraction>"]
+        if format not in format_dict:
+          print "Format %s doesn't exist. Run get_list_formats to get the list of formats."%(format)
+          sys.exit(1)
+        contraction = not arguments["--no-contraction"]
 
         print "go"
-        e = EMSL_dump(db_path=db_path, format=format, contraction=contraction)
+        e = EMSL_dump(db_path=db_path, format=format_dict[format], contraction=contraction)
         e.new_db()
+

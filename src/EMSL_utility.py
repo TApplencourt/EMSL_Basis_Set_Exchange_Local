@@ -10,7 +10,7 @@ class EMSL_dump:
     def __init__(self, db_path=None, format="GAMESS-US", contraction="True"):
         self.db_path = db_path
         self.format = format
-        self.contraction = contraction
+        self.contraction = str(contraction)
 
         import requests
         self.requests = requests
@@ -183,6 +183,25 @@ class EMSL_local:
 
         conn.close()
         return d
+
+format_dict = \
+{
+    "g94": "Gaussian94" ,
+    "gamess-us": "GAMESS-US" ,
+    "gamess-uk": "GAMESS-UK" ,
+    "turbomole": "Turbomole" ,
+    "tx93" : "TX93" , 
+    "molpro" : "Molpro" , 
+    "molproint" : "MolproInt" , 
+    "hondo" : "Hondo" , 
+    "supermolecule" : "SuperMolecule" , 
+    "molcas" : "Molcas" , 
+    "hyperchem" : "HyperChem" , 
+    "dalton" : "Dalton" , 
+    "demon-ks" : "deMon-KS" , 
+    "demon2k" : "deMon2k" , 
+    "aces2" : "AcesII" , 
+}
 
 if __name__ == "__main__":
 
