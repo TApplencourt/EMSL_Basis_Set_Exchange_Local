@@ -2,8 +2,9 @@
 
 import sqlite3
 import re
-import sys
+import sys, os
 
+debug=True
 
 class EMSL_dump:
 
@@ -26,7 +27,20 @@ class EMSL_dump:
         """Download the source code of the iframe who contains the list of the basis set available"""
 
         url = "https://bse.pnl.gov/bse/portal/user/anon/js_peid/11535052407933/panel/Main/template/content"
-        page = self.requests.get(url).text
+        if debug:
+          import cPickle as pickle
+          dbcache = 'db/cache'
+          if not os.path.isfile(dbcache):
+            page = self.requests.get(url).text
+            file=open(dbcache,'w')
+            pickle.dump(page,file)
+          else:
+            file=open(dbcache,'r')
+            page = pickle.load(file)
+          file.close()
+
+        else:
+          page = self.requests.get(url).text
 
         print "Done"
 
@@ -104,24 +118,51 @@ class EMSL_dump:
         c.execute('''CREATE TABLE all_value
                  (name text, description text, elt text, data text)''')
 
-        for i, [name, url, des, elts] in enumerate(list_basis_array):
+        import Queue
+        import threading
 
-            print i, [name, url, des, elts]
+        num_worker_threads=7
+        q_in  = Queue.Queue(num_worker_threads)
+        q_out = Queue.Queue(num_worker_threads)
 
+        basis_raw = {}
+
+        def worker():
+          while True:
+            [name, url, des, elts] = q_in.get()
             url = self.create_url(url, name, elts)
-            basis_raw = self.requests.get(url).text
+            q_out.put ( ([name, url, des, elts], self.requests.get(url).text) )
+            q_in.task_done()
 
+        def enqueue():
+           for [name, url, des, elts] in list_basis_array:
+               q_in.put( ([name, url, des, elts]) )
+           return 0
+
+        t = threading.Thread(target=enqueue)
+        t.daemon = True
+        t.start()
+
+        for i in range(num_worker_threads):
+            t = threading.Thread(target=worker)
+            t.daemon = True
+            t.start()
+
+        for i  in range(len(list_basis_array)):
+            [name, url, des, elts], basis_raw = q_out.get()
             try:
                 basis_data = self.basis_data_row_to_array(
                     basis_raw, name, des, elts)
                 c.executemany(
                     "INSERT INTO all_value VALUES (?,?,?,?)", basis_data)
                 conn.commit()
-                print "Done"
+                print i, name
             except:
+                print name, url, des, elts 
                 pass
-
         conn.close()
+        q_in.join()
+        q_out.join()
 
     def new_db(self):
         """Create new_db from scratch"""
