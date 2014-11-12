@@ -38,7 +38,7 @@ For now  we can only parse (witch: ```./src/EMSL_utility.py#EMSL_dump.basis_data
 Feel free to fork/pull request. 
 
 ##Disclaimer
-It'is not a official APP. Use it with moderation.
+It'is not a official API. Use it with moderation.
 
 >These documents may be freely distributed and used for non-commercial, scientific and educational purposes. 
 >-- <cite>http://www.pnl.gov/notices.asp</cite>
