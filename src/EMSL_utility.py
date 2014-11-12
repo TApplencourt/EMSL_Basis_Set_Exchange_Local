@@ -156,7 +156,7 @@ class EMSL_local:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        c.execute("SELECT DISTINCT elt from all_value WHERE name=:name_us",
+        c.execute("SELECT DISTINCT elt from all_value WHERE name=:name_us COLLATE NOCASE",
                   {"name_us": basis_name})
 
         data = c.fetchall()
@@ -174,7 +174,7 @@ class EMSL_local:
         d = []
 
         for elt in elts:
-            c.execute("SELECT DISTINCT data from all_value WHERE name=:name_cur AND elt=:elt_cur",
+            c.execute("SELECT DISTINCT data from all_value WHERE name=:name_cur COLLATE NOCASE AND elt=:elt_cur COLLATE NOCASE",
                       {"name_cur": basis_name,
                        "elt_cur": elt})
 
