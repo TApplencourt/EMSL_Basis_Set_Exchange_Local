@@ -2,15 +2,16 @@
 
 import sqlite3
 import re
-import sys
+import sys, os
 
+debug=True
 
 class EMSL_dump:
 
     def __init__(self, db_path=None, format="GAMESS-US", contraction="True"):
         self.db_path = db_path
         self.format = format
-        self.contraction = contraction
+        self.contraction = str(contraction)
 
         import requests
         self.requests = requests
@@ -26,7 +27,20 @@ class EMSL_dump:
         """Download the source code of the iframe who contains the list of the basis set available"""
 
         url = "https://bse.pnl.gov/bse/portal/user/anon/js_peid/11535052407933/panel/Main/template/content"
-        page = self.requests.get(url).text
+        if debug:
+          import cPickle as pickle
+          dbcache = 'db/cache'
+          if not os.path.isfile(dbcache):
+            page = self.requests.get(url).text
+            file=open(dbcache,'w')
+            pickle.dump(page,file)
+          else:
+            file=open(dbcache,'r')
+            page = pickle.load(file)
+          file.close()
+
+        else:
+          page = self.requests.get(url).text
 
         print "Done"
 
@@ -104,24 +118,51 @@ class EMSL_dump:
         c.execute('''CREATE TABLE all_value
                  (name text, description text, elt text, data text)''')
 
-        for i, [name, url, des, elts] in enumerate(list_basis_array):
+        import Queue
+        import threading
 
-            print i, [name, url, des, elts]
+        num_worker_threads=7
+        q_in  = Queue.Queue(num_worker_threads)
+        q_out = Queue.Queue(num_worker_threads)
 
+        basis_raw = {}
+
+        def worker():
+          while True:
+            [name, url, des, elts] = q_in.get()
             url = self.create_url(url, name, elts)
-            basis_raw = self.requests.get(url).text
+            q_out.put ( ([name, url, des, elts], self.requests.get(url).text) )
+            q_in.task_done()
 
+        def enqueue():
+           for [name, url, des, elts] in list_basis_array:
+               q_in.put( ([name, url, des, elts]) )
+           return 0
+
+        t = threading.Thread(target=enqueue)
+        t.daemon = True
+        t.start()
+
+        for i in range(num_worker_threads):
+            t = threading.Thread(target=worker)
+            t.daemon = True
+            t.start()
+
+        for i  in range(len(list_basis_array)):
+            [name, url, des, elts], basis_raw = q_out.get()
             try:
                 basis_data = self.basis_data_row_to_array(
                     basis_raw, name, des, elts)
                 c.executemany(
                     "INSERT INTO all_value VALUES (?,?,?,?)", basis_data)
                 conn.commit()
-                print "Done"
+                print i, name
             except:
+                print name, url, des, elts 
                 pass
-
         conn.close()
+        q_in.join()
+        q_out.join()
 
     def new_db(self):
         """Create new_db from scratch"""
@@ -156,7 +197,7 @@ class EMSL_local:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        c.execute("SELECT DISTINCT elt from all_value WHERE name=:name_us",
+        c.execute("SELECT DISTINCT elt from all_value WHERE name=:name_us COLLATE NOCASE",
                   {"name_us": basis_name})
 
         data = c.fetchall()
@@ -174,7 +215,7 @@ class EMSL_local:
         d = []
 
         for elt in elts:
-            c.execute("SELECT DISTINCT data from all_value WHERE name=:name_cur AND elt=:elt_cur",
+            c.execute("SELECT DISTINCT data from all_value WHERE name=:name_cur COLLATE NOCASE AND elt=:elt_cur COLLATE NOCASE",
                       {"name_cur": basis_name,
                        "elt_cur": elt})
 
@@ -183,6 +224,25 @@ class EMSL_local:
 
         conn.close()
         return d
+
+format_dict = \
+{
+    "g94": "Gaussian94" ,
+    "gamess-us": "GAMESS-US" ,
+    "gamess-uk": "GAMESS-UK" ,
+    "turbomole": "Turbomole" ,
+    "tx93" : "TX93" , 
+    "molpro" : "Molpro" , 
+    "molproint" : "MolproInt" , 
+    "hondo" : "Hondo" , 
+    "supermolecule" : "SuperMolecule" , 
+    "molcas" : "Molcas" , 
+    "hyperchem" : "HyperChem" , 
+    "dalton" : "Dalton" , 
+    "demon-ks" : "deMon-KS" , 
+    "demon2k" : "deMon2k" , 
+    "aces2" : "AcesII" , 
+}
 
 if __name__ == "__main__":
 
