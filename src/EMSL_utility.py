@@ -2,9 +2,11 @@
 
 import sqlite3
 import re
-import sys, os
+import sys
+import os
 
-debug=True
+debug = True
+
 
 class EMSL_dump:
 
@@ -28,19 +30,19 @@ class EMSL_dump:
 
         url = "https://bse.pnl.gov/bse/portal/user/anon/js_peid/11535052407933/panel/Main/template/content"
         if debug:
-          import cPickle as pickle
-          dbcache = 'db/cache'
-          if not os.path.isfile(dbcache):
-            page = self.requests.get(url).text
-            file=open(dbcache,'w')
-            pickle.dump(page,file)
-          else:
-            file=open(dbcache,'r')
-            page = pickle.load(file)
-          file.close()
+            import cPickle as pickle
+            dbcache = 'db/cache'
+            if not os.path.isfile(dbcache):
+                page = self.requests.get(url).text
+                file = open(dbcache, 'w')
+                pickle.dump(page, file)
+            else:
+                file = open(dbcache, 'r')
+                page = pickle.load(file)
+            file.close()
 
         else:
-          page = self.requests.get(url).text
+            page = self.requests.get(url).text
 
         print "Done"
 
@@ -121,23 +123,24 @@ class EMSL_dump:
         import Queue
         import threading
 
-        num_worker_threads=7
-        q_in  = Queue.Queue(num_worker_threads)
+        num_worker_threads = 7
+        q_in = Queue.Queue(num_worker_threads)
         q_out = Queue.Queue(num_worker_threads)
 
         basis_raw = {}
 
         def worker():
-          while True:
-            [name, url, des, elts] = q_in.get()
-            url = self.create_url(url, name, elts)
-            q_out.put ( ([name, url, des, elts], self.requests.get(url).text) )
-            q_in.task_done()
+            while True:
+                [name, url, des, elts] = q_in.get()
+                url = self.create_url(url, name, elts)
+                q_out.put(
+                    ([name, url, des, elts], self.requests.get(url).text))
+                q_in.task_done()
 
         def enqueue():
-           for [name, url, des, elts] in list_basis_array:
-               q_in.put( ([name, url, des, elts]) )
-           return 0
+            for [name, url, des, elts] in list_basis_array:
+                q_in.put(([name, url, des, elts]))
+            return 0
 
         t = threading.Thread(target=enqueue)
         t.daemon = True
@@ -148,7 +151,7 @@ class EMSL_dump:
             t.daemon = True
             t.start()
 
-        for i  in range(len(list_basis_array)):
+        for i in range(len(list_basis_array)):
             [name, url, des, elts], basis_raw = q_out.get()
             try:
                 basis_data = self.basis_data_row_to_array(
@@ -158,7 +161,7 @@ class EMSL_dump:
                 conn.commit()
                 print i, name
             except:
-                print name, url, des, elts 
+                print name, url, des, elts
                 pass
         conn.close()
         q_in.join()
@@ -226,23 +229,23 @@ class EMSL_local:
         return d
 
 format_dict = \
-{
-    "g94": "Gaussian94" ,
-    "gamess-us": "GAMESS-US" ,
-    "gamess-uk": "GAMESS-UK" ,
-    "turbomole": "Turbomole" ,
-    "tx93" : "TX93" , 
-    "molpro" : "Molpro" , 
-    "molproint" : "MolproInt" , 
-    "hondo" : "Hondo" , 
-    "supermolecule" : "SuperMolecule" , 
-    "molcas" : "Molcas" , 
-    "hyperchem" : "HyperChem" , 
-    "dalton" : "Dalton" , 
-    "demon-ks" : "deMon-KS" , 
-    "demon2k" : "deMon2k" , 
-    "aces2" : "AcesII" , 
-}
+    {
+        "g94": "Gaussian94",
+        "gamess-us": "GAMESS-US",
+        "gamess-uk": "GAMESS-UK",
+        "turbomole": "Turbomole",
+        "tx93": "TX93",
+        "molpro": "Molpro",
+        "molproint": "MolproInt",
+        "hondo": "Hondo",
+        "supermolecule": "SuperMolecule",
+        "molcas": "Molcas",
+        "hyperchem": "HyperChem",
+        "dalton": "Dalton",
+        "demon-ks": "deMon-KS",
+        "demon2k": "deMon2k",
+        "aces2": "AcesII",
+    }
 
 if __name__ == "__main__":
 
