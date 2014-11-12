@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Emsl basis set exchange local by TApplencourt</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/TApplencourt/EMSL_Basis_Set_Exchange_Local">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/TApplencourt/EMSL_Basis_Set_Exchange_Local/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/TApplencourt/EMSL_Basis_Set_Exchange_Local/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Emsl basis set exchange local</h1>
+          <p>Create of Local Copy of the famous EMSL Basis Set Exhange. No more lag and a API for scripting.</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/TApplencourt">TApplencourt</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>
+<a id="emsl_basis_set_exchange_local" class="anchor" href="#emsl_basis_set_exchange_local" aria-hidden="true"><span class="octicon octicon-link"></span></a>EMSL_Basis_Set_Exchange_Local</h1>
+
+<p>Create of Local Copy of the famous <a href="https://bse.pnl.gov/bse/portal"> EMSL Basis Set Exchange</a> and use it easyly with the API.</p>
+
+<ul>
+<li>Make a slight (40Mo Sqlite3 database) of the EMSL Basis Set Exchange website (One database for all the basisset of one format);</li>
+<li>API for scripting ;<br>
+</li>
+<li>Quick local access without delay ;</li>
+<li>Only need <a href="https://www.python.org/">Python</a> and <a href="http://docs.python-requests.org/en/latest/">Request</a> module.</li>
+</ul>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<pre><code>EMSL Api.
+
+Usage:
+  EMSL_api.py get_list_basis &lt;db_path&gt;
+  EMSL_api.py get_list_elements &lt;db_path&gt; &lt;basis_name&gt;
+  EMSL_api.py get_basis_data &lt;db_path&gt; &lt;basis_name&gt; &lt;elts&gt;...
+  EMSL_api.py get_list_formats
+  EMSL_api.py create_db &lt;db_path&gt; &lt;format&gt; [--no-contraction]
+  EMSL_api.py (-h | --help)
+  EMSL_api.py --version
+
+Options:
+  -h --help         Show this screen.
+  --version         Show version.
+  --no-contraction  Basis functions are not contracted
+
+&lt;db_path&gt; is the path to the SQLite3 file containing the Basis sets.
+</code></pre>
+
+<h2>
+<a id="dependancy" class="anchor" href="#dependancy" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dependancy</h2>
+
+<ul>
+<li>Python &gt;2.6</li>
+<li>Request <code>$ pip install requests</code>
+</li>
+</ul>
+
+<h2>
+<a id="to-do" class="anchor" href="#to-do" aria-hidden="true"><span class="octicon octicon-link"></span></a>To do</h2>
+
+<p>For now  we can only parse (witch: <code>./src/EMSL_utility.py#EMSL_dump.basis_data_row_to_array</code>) Gaussian-US basis set type file.</p>
+
+<p>Feel free to fork/pull request. </p>
+
+<h2>
+<a id="disclaimer" class="anchor" href="#disclaimer" aria-hidden="true"><span class="octicon octicon-link"></span></a>Disclaimer</h2>
+
+<p>It'is not a official API. Use it with moderation.</p>
+
+<blockquote>
+<p>These documents may be freely distributed and used for non-commercial, scientific and educational purposes. 
+-- <a href="http://www.pnl.gov/notices.asp">http://www.pnl.gov/notices.asp</a></p>
+</blockquote>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
