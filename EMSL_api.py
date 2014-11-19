@@ -20,7 +20,7 @@ Options:
 <db_path> is the path to the SQLite3 file containing the Basis sets.
 """
 
-version="0.1.1"
+version = "0.1.1"
 
 
 import sys
@@ -33,8 +33,8 @@ from EMSL_utility import EMSL_local
 
 if __name__ == '__main__':
 
-    arguments = docopt(__doc__, version='EMSL Api '+version)
-    print arguments
+    arguments = docopt(__doc__, version='EMSL Api ' + version)
+#    print arguments
 
     if arguments["get_list_basis"]:
         db_path = arguments["<db_path>"]
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
         l = e.get_basis(basis_name, elts)
         for i in l:
-            print i,'\n'
+            print i, '\n'
 
     elif arguments["get_list_formats"]:
         for i in format_dict:
@@ -74,11 +74,10 @@ if __name__ == '__main__':
         db_path = arguments["<db_path>"]
         format = arguments["<format>"]
         if format not in format_dict:
-          print "Format %s doesn't exist. Run get_list_formats to get the list of formats."%(format)
-          sys.exit(1)
+            print "Format %s doesn't exist. Run get_list_formats to get the list of formats." % (format)
+            sys.exit(1)
         contraction = not arguments["--no-contraction"]
 
-        print "go"
-        e = EMSL_dump(db_path=db_path, format=format_dict[format], contraction=contraction)
+        e = EMSL_dump(
+            db_path=db_path, format=format_dict[format], contraction=contraction)
         e.new_db()
-

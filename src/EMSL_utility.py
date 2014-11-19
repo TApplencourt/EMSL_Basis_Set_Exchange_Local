@@ -4,8 +4,9 @@ import sqlite3
 import re
 import sys
 import os
+import time
 
-debug = True
+debug = False
 
 
 class EMSL_dump:
@@ -23,7 +24,7 @@ class EMSL_dump:
         self.db_path = path
 
     def dwl_basis_list_raw(self):
-        print "Dwl the basis list info",
+        print "Download all the name available in EMSL. It can take some time.",
         sys.stdout.flush()
 
         """Download the source code of the iframe who contains the list of the basis set available"""
@@ -45,14 +46,13 @@ class EMSL_dump:
             page = self.requests.get(url).text
 
         print "Done"
-
         return page
 
     def bl_raw_to_array(self, data_raw):
         """Parse the raw html to create a basis set array whith all the info:
         url, name,description"""
 
-        d = []
+        d = {}
 
         for line in data_raw.split('\n'):
             if "new basisSet(" in line:
@@ -72,11 +72,15 @@ class EMSL_dump:
 
                 if "-ecp" in url.lower():
                     continue
+                d[name] = [name, url, des, elts]
 
-                d.append([name, url, des, elts])
+        """Tric for the unicity of the name"""
+        array = [d[key] for key in d]
 
-        d_sort = sorted(d, key=lambda x: x[0])
-        return d_sort
+        array_sort = sorted(array, key=lambda x: x[0])
+        print len(array_sort), "basisset will be download"
+
+        return array_sort
 
     def create_url(self, url, name, elts):
         """Create the adequate url to get the basis data"""
@@ -100,7 +104,8 @@ class EMSL_dump:
         b = data.find("$DATA")
         e = data.find("$END")
         if (b == -1 or data.find("$DATA$END") != -1):
-            print data
+            if debug:
+                print data
             raise StandardError("WARNING not DATA")
         else:
             data = data[b + 5:e].split('\n\n')
@@ -124,22 +129,34 @@ class EMSL_dump:
         import threading
 
         num_worker_threads = 7
+        num_try_of_dwl = 2
+
         q_in = Queue.Queue(num_worker_threads)
         q_out = Queue.Queue(num_worker_threads)
 
-        basis_raw = {}
-
         def worker():
+            """get a Job from the q_in, do stuff, when finish put it in the q_out"""
             while True:
                 [name, url, des, elts] = q_in.get()
                 url = self.create_url(url, name, elts)
-                q_out.put(
-                    ([name, url, des, elts], self.requests.get(url).text))
+
+                for i in range(num_try_of_dwl):
+                    text = self.requests.get(url).text
+                    try:
+                        basis_data = self.basis_data_row_to_array(
+                            text, name, des, elts)
+                        break
+                    except:
+                        time.sleep(0.1)
+                        pass
+
+                q_out.put(([name, url, des, elts], basis_data))
                 q_in.task_done()
 
         def enqueue():
             for [name, url, des, elts] in list_basis_array:
                 q_in.put(([name, url, des, elts]))
+
             return 0
 
         t = threading.Thread(target=enqueue)
@@ -151,21 +168,24 @@ class EMSL_dump:
             t.daemon = True
             t.start()
 
-        for i in range(len(list_basis_array)):
-            [name, url, des, elts], basis_raw = q_out.get()
+        nb_basis = len(list_basis_array)
+
+        for i in range(nb_basis):
+            [name, url, des, elts], basis_data = q_out.get()
+
             try:
-                basis_data = self.basis_data_row_to_array(
-                    basis_raw, name, des, elts)
                 c.executemany(
                     "INSERT INTO all_value VALUES (?,?,?,?)", basis_data)
                 conn.commit()
-                print i, name
+
+                print '{:>3}'.format(i + 1), "/", nb_basis, name
             except:
-                print name, url, des, elts
-                pass
+                print '{:>3}'.format(i + 1), "/", nb_basis, name, "fail",
+                print '   ', [url, des, elts]
+                raise
         conn.close()
+
         q_in.join()
-        q_out.join()
 
     def new_db(self):
         """Create new_db from scratch"""
