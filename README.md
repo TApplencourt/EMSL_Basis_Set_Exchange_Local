@@ -8,6 +8,16 @@ Create of Local Copy of the famous [EMSL Basis Set Exchange](https://bse.pnl.gov
 * Quick local access without delay ;
 * Only need [Python](https://www.python.org/) and [Request](http://docs.python-requests.org/en/latest/) module.
 
+##Dependancy
+* Python >2.6
+* Request ```pip install requests```
+
+##Installation
+* Download the git (```$ git clone https://github.com/TApplencourt/EMSL_Basis_Set_Exchange_Local.git``` for example)
+* ```cd``` into & run ```$ ./setup.py```
+* ```source EMSL_api.rc```
+* Done ! You can now, use ```EMSL_api.py``` or use all the python fonction inside ```./src```
+
 ##Usage
 ```
 EMSL Api.
@@ -28,9 +38,6 @@ Options:
 
 <db_path> is the path to the SQLite3 file containing the Basis sets.
 ```
-##Dependancy
-* Python >2.6
-* Request ```$ pip install requests```
 
 ##To do
 For now  we can only parse Gaussian-US basis set type file. (Look at ```./src/EMSL_utility.py#EMSL_dump.basis_data_row_to_array```)
