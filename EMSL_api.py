@@ -20,16 +20,19 @@ Options:
 <db_path> is the path to the SQLite3 file containing the Basis sets.
 """
 
-version = "0.1.1"
-
+version = "0.1.2"
 
 import sys
-sys.path.append('./src/')
 
-from docopt import docopt
-from EMSL_utility import EMSL_dump
-from EMSL_utility import format_dict
-from EMSL_utility import EMSL_local
+try:
+    from docopt import docopt
+    from EMSL_utility import EMSL_dump
+    from EMSL_utility import format_dict
+    from EMSL_utility import EMSL_local
+
+except:
+    print "Run setup.py then source EMSL_api.rc"
+    sys.exit(1)
 
 if __name__ == '__main__':
 
