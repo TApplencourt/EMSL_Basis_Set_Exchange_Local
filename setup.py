@@ -33,8 +33,27 @@ if ins:
 
 path = os.path.split(os.path.abspath(sys.argv[0]))[0]
 
+
+completion_function = \
+    """
+function _mycomplete_()
+{
+    local word=${COMP_WORDS[COMP_CWORD]}
+
+    if [  $COMP_CWORD -eq 1 ]; then
+        opt="%s"
+        COMPREPLY=( $(compgen -W "${opt}" -- $word))
+    else
+        COMPREPLY=()
+    fi
+}
+
+complete -o default -F _mycomplete_ EMSL_api.py
+""" % " ".join(["get_list_basis", "get_list_elements", "get_basis_data", "get_list_formats", "create_db", "-h", "--help", "--version"])
+
 with open(path + "/EMSL_api.rc", "w") as f:
     f.write("export EMSL_API_ROOT=%s" % path + "\n")
     f.write("export PYTHONPATH=${PYTHONPATH}:${EMSL_API_ROOT}/src" + "\n")
+    f.write(completion_function)
 
 print "Source EMSL_api.rc, pls"
