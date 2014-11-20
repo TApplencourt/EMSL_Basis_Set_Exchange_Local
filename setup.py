@@ -48,7 +48,7 @@ function _mycomplete_()
     fi
 }
 
-complete -o default -F _mycomplete_ EMSL_api.py
+complete -o default -F _mycomplete_ ./EMSL_api.py
 """ % " ".join(["get_list_basis", "get_list_elements", "get_basis_data", "get_list_formats", "create_db", "-h", "--help", "--version"])
 
 with open(path + "/EMSL_api.rc", "w") as f:

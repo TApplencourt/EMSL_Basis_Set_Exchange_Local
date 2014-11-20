@@ -4,7 +4,7 @@
 """EMSL Api.
 
 Usage:
-  EMSL_api.py get_list_basis <db_path>
+  EMSL_api.py get_list_basis <db_path> [<elts>...]
   EMSL_api.py get_list_elements <db_path> <basis_name>
   EMSL_api.py get_basis_data <db_path> <basis_name> <elts>...
   EMSL_api.py get_list_formats
@@ -42,8 +42,10 @@ if __name__ == '__main__':
     if arguments["get_list_basis"]:
         db_path = arguments["<db_path>"]
 
+        elts = arguments["<elts>"]
+
         e = EMSL_local(db_path=db_path)
-        l = e.get_list_basis_available()
+        l = e.get_list_basis_available(elts)
         for i in l:
             print i
 

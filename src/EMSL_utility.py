@@ -202,13 +202,22 @@ class EMSL_local:
     def __init__(self, db_path=None):
         self.db_path = db_path
 
-    def get_list_basis_available(self):
+    def get_list_basis_available(self, elts=[]):
 
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        c.execute("SELECT DISTINCT name from all_value")
-        data = c.fetchall()
+        if not elts:
+
+            c.execute("SELECT DISTINCT name from all_value")
+            data = c.fetchall()
+
+        else:
+            cmd = ["SELECT name FROM all_value WHERE elt=?"] * len(elts)
+            cmd = " INTERSECT ".join(cmd) + ";"
+
+            c.execute(cmd, elts)
+            data = c.fetchall()
 
         data = [i[0] for i in data]
 
