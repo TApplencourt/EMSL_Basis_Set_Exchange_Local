@@ -47,6 +47,17 @@ Feel free to fork/pull request.
 ##Disclaimer
 It'is not a official API. Use it with moderation.
 
+In papers where you use the basis sets obtained from the Basis Set Exchange please site this :
+>The Role of Databases in Support of Computational Chemistry Calculations
+>
+>>--<cite>Feller, D.; J. Comp. Chem., 17(13), 1571-1586, 1996.</cite>
+
+>Basis Set Exchange: A Community Database for Computational Sciences
+>
+>>--<cite>Schuchardt, K.L., Didier, B.T., Elsethagen, T., Sun, L., Gurumoorthi, V., Chase, J., Li, J., and Windus ; T.L.
+>>J. Chem. Inf. Model., 47(3), 1045-1052, 2007, doi:10.1021/ci600510j.</cite>
+
+And don't forget: 
 >These documents may be freely distributed and used for non-commercial, scientific and educational purposes. 
 >-- <cite>http://www.pnl.gov/notices.asp</cite>
 
