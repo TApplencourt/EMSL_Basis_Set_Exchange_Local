@@ -209,17 +209,17 @@ class EMSL_local:
 
         if not elts:
 
-            c.execute("SELECT DISTINCT name from all_value")
+            c.execute("SELECT DISTINCT name,description from all_value")
             data = c.fetchall()
 
         else:
-            cmd = ["SELECT name FROM all_value WHERE elt=?"] * len(elts)
+            cmd = ["SELECT name,description FROM all_value WHERE elt=?"] * len(elts)
             cmd = " INTERSECT ".join(cmd) + ";"
 
             c.execute(cmd, elts)
             data = c.fetchall()
 
-        data = [i[0] for i in data]
+        data = [i[:] for i in data]
 
         conn.close()
         return data
