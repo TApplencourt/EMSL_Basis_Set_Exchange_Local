@@ -1,5 +1,6 @@
 EMSL_Basis_Set_Exchange_Local
 =============================
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/TApplencourt/EMSL_Basis_Set_Exchange_Local?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Create of Local Copy of the famous [EMSL Basis Set Exchange](https://bse.pnl.gov/bse/portal) and use it easily with the API.
 
