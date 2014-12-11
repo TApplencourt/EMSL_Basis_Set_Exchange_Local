@@ -37,7 +37,6 @@ except:
 if __name__ == '__main__':
 
     arguments = docopt(__doc__, version='EMSL Api ' + version)
-#    print arguments
 
     if arguments["get_list_basis"]:
         db_path = arguments["<db_path>"]
