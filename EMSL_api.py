@@ -4,12 +4,12 @@
 """EMSL Api.
 
 Usage:
-  EMSL_api.py list_basis        [--ele=element_name...]
+  EMSL_api.py list_basis        [--atom=atom_name...]
                                 [--db_path=db_path]
-  EMSL_api.py list_elements  --basis=basis_name
+  EMSL_api.py list_atoms  --basis=basis_name
                                 [--db_path=db_path]
   EMSL_api.py get_basis_data --basis=basis_name
-                                [--ele=element_name...]
+                                [--atom=atom_name...]
                                 [--db_path=db_path]
                                 [(--save [--path=path])]
   EMSL_api.py get_list_formats
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     if arguments["list_basis"]:
         e = EMSL_local(db_path=db_path)
 
-        elts = arguments["--ele"]
+        elts = arguments["--atom"]
         l = e.get_list_basis_available(elts)
 
         for name, des in l:
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     #| |   | / __| __| |  __|| |/ _ \ '_ ` _ \ / _ \ '_ \| __/ __|
     #| |___| \__ \ |_  | |___| |  __/ | | | | |  __/ | | | |_\__ \
     #\_____/_|___/\__| \____/|_|\___|_| |_| |_|\___|_| |_|\__|___/
-    if arguments["list_elements"]:
+    if arguments["list_atoms"]:
         e = EMSL_local(db_path=db_path)
 
         basis_name = arguments["--basis"]
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     if arguments["get_basis_data"]:
         e = EMSL_local(db_path=db_path)
         basis_name = arguments["--basis"]
-        elts = arguments["--ele"]
+        elts = arguments["--atom"]
 
         l = e.get_basis(basis_name, elts)
         str_ = "\n\n".join(l) + "\n"
@@ -99,7 +99,8 @@ if __name__ == '__main__':
             if arguments["--path"]:
                 path = arguments["--path"]
             else:
-                path = "/tmp/" + "_".join([basis_name, ".".join(elts)])
+                path = "_".join([basis_name, ".".join(elts)])
+                path = "/tmp/" + path + ".bs"
 
             with open(path, 'w') as f:
                 f.write(str_ + "\n")
