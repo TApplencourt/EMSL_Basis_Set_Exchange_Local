@@ -9,6 +9,16 @@ import time
 debug = False
 
 
+def cond_sql_or(table_name, l_value):
+
+    l = []
+    dmy = " OR ".join(['%s = "%s"' % (table_name, i) for i in l_value])
+    if dmy:
+        l.append("(%s)" % dmy)
+
+    return l
+
+
 class EMSL_dump:
 
     def __init__(self, db_path=None, format="GAMESS-US", contraction="True"):
@@ -106,7 +116,7 @@ class EMSL_dump:
         if (b == -1 or data.find("$DATA$END") != -1):
             if debug:
                 print data
-            raise StandardError("WARNING not DATA")
+            raise Exception("WARNING not DATA")
         else:
             data = data[b + 5:e].split('\n\n')
             for (elt, data_elt) in zip(elts, data):
@@ -213,7 +223,8 @@ class EMSL_local:
             data = c.fetchall()
 
         else:
-            cmd = ["SELECT name,description FROM all_value WHERE elt=?"] * len(elts)
+            cmd = [
+                "SELECT name,description FROM all_value WHERE elt=?"] * len(elts)
             cmd = " INTERSECT ".join(cmd) + ";"
 
             c.execute(cmd, elts)
@@ -229,8 +240,9 @@ class EMSL_local:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        c.execute("SELECT DISTINCT elt from all_value WHERE name=:name_us COLLATE NOCASE",
-                  {"name_us": basis_name})
+        c.execute(
+            "SELECT DISTINCT elt from all_value WHERE name=:name_us COLLATE NOCASE", {
+                "name_us": basis_name})
 
         data = c.fetchall()
 
@@ -246,13 +258,18 @@ class EMSL_local:
 
         d = []
 
-        for elt in elts:
-            c.execute("SELECT DISTINCT data from all_value WHERE name=:name_cur COLLATE NOCASE AND elt=:elt_cur COLLATE NOCASE",
-                      {"name_cur": basis_name,
-                       "elt_cur": elt})
+        if elts:
+            cmd_ele = "AND " + " ".join(cond_sql_or("elt", elts))
+        else:
+            cmd_ele = ""
 
-            data = c.fetchone()
-            d.append(data[0])
+        c.execute('''SELECT DISTINCT data from all_value
+                   WHERE name="{basis_name}" COLLATE NOCASE
+                   {cmd_ele}'''.format(basis_name=basis_name,
+                                       cmd_ele=cmd_ele))
+
+        for data in c.fetchall():
+            d.append(data[0].strip())
 
         conn.close()
         return d
