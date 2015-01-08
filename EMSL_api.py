@@ -88,8 +88,10 @@ if __name__ == '__main__':
     #\____/ \__,_|___/_|___/  \__,_|\__,_|\__\__,_|
     if arguments["get_basis_data"]:
         e = EMSL_local(db_path=db_path)
+        basis_name = arguments["--basis"]
+        elts = arguments["--ele"]
 
-        l = e.get_basis(arguments["--basis"], arguments["--ele"])
+        l = e.get_basis(basis_name, elts)
         str_ = "\n\n".join(l) + "\n"
 
         if arguments["--save"]:
