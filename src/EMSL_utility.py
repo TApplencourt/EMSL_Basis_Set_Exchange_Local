@@ -6,7 +6,17 @@ import sys
 import os
 import time
 
-debug = False
+debug = True
+
+elt_path = os.path.dirname(sys.argv[0]) + "/src/elts_abrev.dat"
+
+with open(elt_path, "r") as f:
+    data = f.readlines()
+
+dict_ele = dict()
+for i in data:
+    l = i.split("-")
+    dict_ele[l[1].strip().lower()] = l[2].strip().lower()
 
 
 def cond_sql_or(table_name, l_value):
@@ -118,10 +128,21 @@ class EMSL_dump:
                 print data
             raise Exception("WARNING not DATA")
         else:
+            data = data.replace("PHOSPHOROUS", "PHOSPHORUS")
             data = data[b + 5:e].split('\n\n')
+
             for (elt, data_elt) in zip(elts, data):
 
-                d.append((name, des, elt, data_elt))
+                elt_long_th = dict_ele[elt.lower()]
+                elt_long_exp = data_elt.split()[0].lower()
+
+                if elt_long_th == elt_long_exp:
+                    d.append((name, des, elt, data_elt.strip()))
+                else:
+                    print "th", elt_long_th
+                    print "exp", elt_long_exp
+                    print "abv", elt
+                    raise Exception("WARNING not good ELEMENT")
 
         return d
 
@@ -139,7 +160,7 @@ class EMSL_dump:
         import threading
 
         num_worker_threads = 7
-        num_try_of_dwl = 2
+        attemps_max = 20
 
         q_in = Queue.Queue(num_worker_threads)
         q_out = Queue.Queue(num_worker_threads)
@@ -150,7 +171,8 @@ class EMSL_dump:
                 [name, url, des, elts] = q_in.get()
                 url = self.create_url(url, name, elts)
 
-                for i in range(num_try_of_dwl):
+                attemps = 0
+                while attemps < attemps_max:
                     text = self.requests.get(url).text
                     try:
                         basis_data = self.basis_data_row_to_array(
@@ -158,10 +180,14 @@ class EMSL_dump:
                         break
                     except:
                         time.sleep(0.1)
-                        pass
+                        attemps += 1
 
-                q_out.put(([name, url, des, elts], basis_data))
-                q_in.task_done()
+                try:
+                    q_out.put(([name, url, des, elts], basis_data))
+                    q_in.task_done()
+                except:
+                    print name,url,des
+                    raise
 
         def enqueue():
             for [name, url, des, elts] in list_basis_array:

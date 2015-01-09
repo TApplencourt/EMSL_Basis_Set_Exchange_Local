@@ -13,9 +13,9 @@ Usage:
                                 [--db_path=db_path]
                                 [--with_l]
                                 [(--save [--path=path])]
-  EMSL_api.py get_list_formats
+  EMSL_api.py list_formats
   EMSL_api.py create_db      --db_path=db_path
-                             --format
+                             --format=format
                              [--no-contraction]
   EMSL_api.py (-h | --help)
   EMSL_api.py --version
@@ -50,7 +50,7 @@ if __name__ == '__main__':
         db_path = arguments["--db_path"]
     else:
         import os
-        db_path = os.path.dirname(sys.argv[0]) + "/db/Gausian_uk.db"
+        db_path = os.path.dirname(sys.argv[0]) + "/db/Gamess-us.db"
 
     # _     _     _    ______           _
     #| |   (_)   | |   | ___ \         (_)
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     #| |   | / __| __| |  _/ _ \| '__| '_ ` _ \ / _` | __/ __|
     #| |___| \__ \ |_  | || (_) | |  | | | | | | (_| | |_\__ \
     #\_____/_|___/\__| |_| \___/|_|  |_| |_| |_|\__,_|\__|___/
-    if arguments["get_list_formats"]:
+    if arguments["list_formats"]:
         for i in format_dict:
             print i
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         db_path = arguments["--db_path"]
         format = arguments["--format"]
         if format not in format_dict:
-            print "Format %s doesn't exist. Run get_list_formats to get the list of formats." % (format)
+            print "Format %s doesn't exist. Run list_formats to get the list of formats." % (format)
             sys.exit(1)
         contraction = not arguments["--no-contraction"]
 
