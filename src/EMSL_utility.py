@@ -310,13 +310,26 @@ class EMSL_local:
             for type_, begin, end in get_list_type(l_line_raw):
 
                 if not(with_l) and type_ in "L":
-                    body = l_line_raw[begin + 1:end]
+
+                    body_s = body_p = []
+
+                    for i_l in l_line_raw[begin + 1:end]:
+                        a = i_l.split()
+
+                        common = "{:>3}".format(a[0])
+                        common += "{:>15.7f}".format(float(a[1]))
+
+                        tail_s = common + "{:>23.7f}".format(float(a[2]))
+                        body_s.append(tail_s)
+
+                        tail_p = common + "{:>23.7f}".format(float(a[3]))
+                        body_p.append(tail_p)
 
                     l_line += [l_line_raw[begin].replace("L", "S")]
-                    l_line += body
+                    l_line += body_s
 
                     l_line += [l_line_raw[begin].replace("L", "P")]
-                    l_line += body
+                    l_line += body_p
                 else:
                     l_line += l_line_raw[begin:end]
 
