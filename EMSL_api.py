@@ -11,6 +11,7 @@ Usage:
   EMSL_api.py get_basis_data --basis=basis_name
                                 [--atom=atom_name...]
                                 [--db_path=db_path]
+                                [--with_l]
                                 [(--save [--path=path])]
   EMSL_api.py get_list_formats
   EMSL_api.py create_db      --db_path=db_path
@@ -91,7 +92,8 @@ if __name__ == '__main__':
         basis_name = arguments["--basis"]
         elts = arguments["--atom"]
 
-        l = e.get_basis(basis_name, elts)
+        print arguments["--with_l"]
+        l = e.get_basis(basis_name, elts,arguments["--with_l"])
         str_ = "\n\n".join(l) + "\n"
 
         if arguments["--save"]:

@@ -233,6 +233,7 @@ class EMSL_local:
         data = [i[:] for i in data]
 
         conn.close()
+
         return data
 
     def get_list_element_available(self, basis_name):
@@ -251,12 +252,31 @@ class EMSL_local:
         conn.close()
         return data
 
-    def get_basis(self, basis_name, elts):
+    def get_basis(self, basis_name, elts=None, with_l=False):
 
+        def get_list_type(l_line):
+            l = []
+            for i, line in enumerate(l_line):
+
+                m = re.search(p, line)
+                if m:
+                    l.append([m.group(1), i])
+                    try:
+                        l[-2].append(i)
+                    except IndexError:
+                        pass
+
+            l[-1].append(i + 1)
+            return l
+
+        import re
+
+        #  __            _
+        # /__  _ _|_   _|_ ._ _  ._ _     _  _. |
+        # \_| (/_ |_    |  | (_) | | |   _> (_| |
+        #                                     |
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
-
-        d = []
 
         if elts:
             cmd_ele = "AND " + " ".join(cond_sql_or("elt", elts))
@@ -268,11 +288,42 @@ class EMSL_local:
                    {cmd_ele}'''.format(basis_name=basis_name,
                                        cmd_ele=cmd_ele))
 
-        for data in c.fetchall():
-            d.append(data[0].strip())
-
+        l_data_raw = c.fetchall()
         conn.close()
-        return d
+
+        # |_|  _. ._   _| |  _    || | ||
+        # | | (_| | | (_| | (/_      |_
+        #
+
+        p = re.compile(ur'^(\w)\s+\d+\b')
+
+        l_data = []
+
+        for data_raw in l_data_raw:
+
+            basis = data_raw[0].strip()
+
+            l_line_raw = basis.split("\n")
+
+            l_line = [l_line_raw[0]]
+
+            for type_, begin, end in get_list_type(l_line_raw):
+
+                if not(with_l) and type_ in "L":
+                    body = l_line_raw[begin + 1:end]
+
+                    l_line += [l_line_raw[begin].replace("L", "S")]
+                    l_line += body
+
+                    l_line += [l_line_raw[begin].replace("L", "P")]
+                    l_line += body
+                else:
+                    l_line += l_line_raw[begin:end]
+
+            l_data.append("\n".join(l_line))
+
+        return l_data
+
 
 format_dict = \
     {
