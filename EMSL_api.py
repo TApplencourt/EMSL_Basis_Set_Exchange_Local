@@ -92,7 +92,6 @@ if __name__ == '__main__':
         basis_name = arguments["--basis"]
         elts = arguments["--atom"]
 
-        print arguments["--with_l"]
         l = e.get_basis(basis_name, elts,arguments["--with_l"])
         str_ = "\n\n".join(l) + "\n"
 

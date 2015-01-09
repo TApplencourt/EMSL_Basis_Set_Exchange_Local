@@ -307,13 +307,15 @@ class EMSL_local:
 
             l_line = [l_line_raw[0]]
 
-            for type_, begin, end in get_list_type(l_line_raw):
+            for symmetry, begin, end in get_list_type(l_line_raw):
 
-                if not(with_l) and type_ in "L":
+                if not(with_l) and symmetry in "L":
 
-                    body_s = body_p = []
+                    body_s = []
+                    body_p = []
 
                     for i_l in l_line_raw[begin + 1:end]:
+
                         a = i_l.split()
 
                         common = "{:>3}".format(a[0])
