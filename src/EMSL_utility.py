@@ -129,12 +129,19 @@ class EMSL_dump:
             raise Exception("WARNING not DATA")
         else:
             data = data.replace("PHOSPHOROUS", "PHOSPHORUS")
-            data = data[b + 5:e].split('\n\n')
+            data = data.replace("D+", "E+")
+            data = data.replace("D-", "E-")
+
+            data = data[b + 5:e-1].split('\n\n')
 
             for (elt, data_elt) in zip(elts, data):
 
                 elt_long_th = dict_ele[elt.lower()]
                 elt_long_exp = data_elt.split()[0].lower()
+
+                if "$" in data_elt:
+                    print "Eror",
+                    raise Exception("WARNING not bad split")
 
                 if elt_long_th == elt_long_exp:
                     d.append((name, des, elt, data_elt.strip()))
