@@ -33,14 +33,10 @@ version = "0.2.0"
 
 import sys
 
-try:
-    from docopt import docopt
-    from EMSL_utility import EMSL_dump
-    from EMSL_utility import format_dict
-    from EMSL_utility import EMSL_local
-except:
-    print "Run setup.py then source EMSL_api.rc"
-    sys.exit(1)
+from src.docopt import docopt
+from src.EMSL_utility import EMSL_dump
+from src.EMSL_utility import format_dict
+from src.EMSL_utility import EMSL_local
 
 if __name__ == '__main__':
 
@@ -50,7 +46,7 @@ if __name__ == '__main__':
         db_path = arguments["--db_path"]
     else:
         import os
-        db_path = os.path.dirname(sys.argv[0]) + "/db/Gamess-us.db"
+        db_path = os.path.dirname(__file__) + "/db/Gamess-us.db"
 
     # _     _     _    ______           _
     #| |   (_)   | |   | ___ \         (_)
