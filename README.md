@@ -7,17 +7,17 @@ Create of Local Copy of the famous [EMSL Basis Set Exchange](https://bse.pnl.gov
 * Make a slight copy (40Mo Sqlite3 database) of the EMSL Basis Set Exchange website (One database for all the basis set of one format);
 * API for scripting;  
 * Quick local access without delay;
-* Only need [Python](https://www.python.org/) and [Request](http://docs.python-requests.org/en/latest/) module.
+* Only need [Python](https://www.python.org/)
 
 ##Dependency
 * Python >2.6
 
 ###### Optional
 If you plan to download manually some database -not using the pre existing one- you need :
-* Request ```pip install requests``` (in a virtual env or with sudo)
+* [Request](http://docs.python-requests.org/en/latest/) python module. ```$pip install requests``` (do it in a virtual env or with sudo)
 
 ##Installation
-* Download the git repertory (```$ git clone https://github.com/TApplencourt/EMSL_Basis_Set_Exchange_Local.git``` for example)
+* Download the git repertory (```$git clone https://github.com/TApplencourt/EMSL_Basis_Set_Exchange_Local.git``` for example)
 * That all! You can now, use ```EMSL_api.py```
 
 ##Usage
