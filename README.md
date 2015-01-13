@@ -11,6 +11,9 @@ Create of Local Copy of the famous [EMSL Basis Set Exchange](https://bse.pnl.gov
 
 ##Dependency
 * Python >2.6
+
+###### Optional
+If you plan to download manually some database -not using the pre existing one- you need :
 * Request ```pip install requests``` (in a virtual env or with sudo)
 
 ##Installation
