@@ -14,8 +14,8 @@ Create of Local Copy of the famous [EMSL Basis Set Exchange](https://bse.pnl.gov
 * Request ```pip install requests``` (in a virtual env or with sudo)
 
 ##Installation
-* Download the git (```$ git clone https://github.com/TApplencourt/EMSL_Basis_Set_Exchange_Local.git``` for example)
-* Done ! You can now, use ```EMSL_api.py```
+* Download the git repertory (```$ git clone https://github.com/TApplencourt/EMSL_Basis_Set_Exchange_Local.git``` for example)
+* That all! You can now, use ```EMSL_api.py```
 
 ##Usage
 ```
