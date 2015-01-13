@@ -41,23 +41,24 @@
         <h1>
 <a id="emsl_basis_set_exchange_local" class="anchor" href="#emsl_basis_set_exchange_local" aria-hidden="true"><span class="octicon octicon-link"></span></a>EMSL_Basis_Set_Exchange_Local</h1>
 
+<p><a href="https://gitter.im/TApplencourt/EMSL_Basis_Set_Exchange_Local?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="Gitter"></a></p>
+
 <p>Create of Local Copy of the famous <a href="https://bse.pnl.gov/bse/portal">EMSL Basis Set Exchange</a> and use it easily with the API.</p>
 
 <ul>
 <li>Make a slight copy (40Mo Sqlite3 database) of the EMSL Basis Set Exchange website (One database for all the basis set of one format);</li>
-<li>API for scripting ;<br>
+<li>API for scripting;<br>
 </li>
-<li>Quick local access without delay ;</li>
+<li>Quick local access without delay;</li>
 <li>Only need <a href="https://www.python.org/">Python</a> and <a href="http://docs.python-requests.org/en/latest/">Request</a> module.</li>
 </ul>
 
 <h2>
-<a id="dependancy" class="anchor" href="#dependancy" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dependancy</h2>
+<a id="dependency" class="anchor" href="#dependency" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dependency</h2>
 
 <ul>
 <li>Python &gt;2.6</li>
-<li>Request <code>pip install requests</code>
-</li>
+<li>Request <code>pip install requests</code> (in a virtual env or with sudo)</li>
 </ul>
 
 <h2>
@@ -65,11 +66,7 @@
 
 <ul>
 <li>Download the git (<code>$ git clone https://github.com/TApplencourt/EMSL_Basis_Set_Exchange_Local.git</code> for example)</li>
-<li>
-<code>cd</code> into &amp; run <code>$ ./setup.py</code>
-</li>
-<li><code>source EMSL_api.rc</code></li>
-<li>Done ! You can now, use <code>EMSL_api.py</code> or use all the python fonction inside <code>./src</code>
+<li>Done ! You can now, use <code>EMSL_api.py</code>
 </li>
 </ul>
 
@@ -79,11 +76,19 @@
 <pre><code>EMSL Api.
 
 Usage:
-  EMSL_api.py get_list_basis &lt;db_path&gt;
-  EMSL_api.py get_list_elements &lt;db_path&gt; &lt;basis_name&gt;
-  EMSL_api.py get_basis_data &lt;db_path&gt; &lt;basis_name&gt; &lt;elts&gt;...
-  EMSL_api.py get_list_formats
-  EMSL_api.py create_db &lt;db_path&gt; &lt;format&gt; [--no-contraction]
+  EMSL_api.py list_basis        [--atom=&lt;atom_name&gt;...]
+                                [--db_path=&lt;db_path&gt;]
+  EMSL_api.py list_atoms  --basis=&lt;basis_name&gt;
+                                [--db_path=&lt;db_path&gt;]
+  EMSL_api.py get_basis_data --basis=&lt;basis_name&gt;
+                                [--atom=&lt;atom_name&gt;...]
+                                [--db_path=&lt;db_path&gt;]
+                                [--with_l]
+                                [(--save [--path=&lt;path&gt;])]
+  EMSL_api.py list_formats
+  EMSL_api.py create_db      --db_path=&lt;db_path&gt;
+                             --format=&lt;format&gt;
+                             [--no-contraction]
   EMSL_api.py (-h | --help)
   EMSL_api.py --version
 
@@ -93,7 +98,15 @@ Options:
   --no-contraction  Basis functions are not contracted
 
 &lt;db_path&gt; is the path to the SQLite3 file containing the Basis sets.
+By default is $EMSL_API_ROOT/db/Gausian_uk.db
 </code></pre>
+
+<h2>
+<a id="demonstration" class="anchor" href="#demonstration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Demonstration</h2>
+
+<p><img src="http://fat.gfycat.com/WelcomePerkyChrysomelid.gif" alt=""></p>
+
+<p>(For a beter quality see the <a href="https://asciinema.org/api/asciicasts/15380">Source</a>)</p>
 
 <h2>
 <a id="to-do" class="anchor" href="#to-do" aria-hidden="true"><span class="octicon octicon-link"></span></a>To do</h2>
