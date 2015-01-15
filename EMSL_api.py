@@ -32,6 +32,7 @@ By default is $EMSL_API_ROOT/db/Gausian_uk.db
 version = "0.2.0"
 
 import sys
+import os
 
 from src.docopt import docopt
 from src.EMSL_utility import EMSL_dump
@@ -47,6 +48,23 @@ if __name__ == '__main__':
     else:
         import os
         db_path = os.path.dirname(__file__) + "/db/Gamess-us.db"
+
+    # Check if db file is readable
+    if not os.access(db_path,os.R_OK):
+        print >>sys.stderr, "Db file %s is not readable"%(db_path)
+        sys.exit(1)
+
+    # Check if the file system allows I/O on sqlite3 (lustre)
+    # If not, copy on /dev/shm and remove after opening
+    try:
+        EMSL_local(db_path=db_path).get_list_basis_available([])
+    except:
+        new_db_path = "/dev/shm/%d.db"%(os.getpid())
+        os.system("cp %s %s"%(db_path,new_db_path))
+        db_path = new_db_path
+        # try again to check
+        EMSL_local(db_path=db_path).get_list_basis_available([])
+
 
     # _     _     _    ______           _
     #| |   (_)   | |   | ___ \         (_)
@@ -134,3 +152,8 @@ if __name__ == '__main__':
             format=format_dict[format],
             contraction=contraction)
         e.new_db()
+
+
+    # Clean up on exit
+    os.system("rm -f /dev/shm/%d.db"%(os.getpid()))
+
