@@ -19,6 +19,29 @@ for i in data:
     dict_ele[l[1].strip().lower()] = l[2].strip().lower()
 
 
+def install_with_pip(name):
+
+    ins = False
+    d = {'y': True,
+         'n': False}
+
+    while True:
+        choice = raw_input('Do you want to install it ? [Y/N]')
+        try:
+            ins = d[choice.lower()]
+            break
+        except:
+            print "not a valid choice"
+
+    if ins:
+        try:
+            import pip
+            pip.main(['install', name])
+        except:
+            print "You need pip, (http://pip.readthedocs.org/en/latest/installing.html)"
+            sys.exit(1)
+
+
 def cond_sql_or(table_name, l_value):
 
     l = []
@@ -36,8 +59,13 @@ class EMSL_dump:
         self.format = format
         self.contraction = str(contraction)
 
-        import requests
-        self.requests = requests
+        try:
+            import requests
+        except:
+            print "You need the requests package"
+            install_with_pip("requests")
+        finally:
+            self.requests = requests
 
     def set_db_path(self, path):
         """Define the database path"""
@@ -132,7 +160,7 @@ class EMSL_dump:
             data = data.replace("D+", "E+")
             data = data.replace("D-", "E-")
 
-            data = data[b + 5:e-1].split('\n\n')
+            data = data[b + 5:e - 1].split('\n\n')
 
             for (elt, data_elt) in zip(elts, data):
 
@@ -193,7 +221,7 @@ class EMSL_dump:
                     q_out.put(([name, url, des, elts], basis_data))
                     q_in.task_done()
                 except:
-                    print name,url,des
+                    print name, url, des
                     raise
 
         def enqueue():
