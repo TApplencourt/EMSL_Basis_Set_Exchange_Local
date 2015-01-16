@@ -54,7 +54,8 @@ if __name__ == '__main__':
 
     # Check the db
     try:
-        db_path, db_path_changed = checkSQLite3(db_path)
+        if not(arguments['create_db']):
+            db_path, db_path_changed = checkSQLite3(db_path)
     except:
         sys.exit(1)
 
@@ -135,6 +136,8 @@ if __name__ == '__main__':
     if arguments["create_db"]:
         db_path = arguments["--db_path"]
         format = arguments["--format"]
+
+        format_dict = EMSL_dump().get_list_format()
         if format not in format_dict:
             print "Format %s doesn't exist. Run list_formats to get the list of formats." % (format)
             sys.exit(1)

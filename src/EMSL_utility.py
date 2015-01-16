@@ -6,7 +6,7 @@ import sys
 import os
 import time
 
-debug = True
+debug = False
 
 
 def checkSQLite3(db_path):
@@ -47,7 +47,7 @@ def checkSQLite3(db_path):
         changed = False
         return db_path, changed
 
-    #Try again to check
+    # Try again to check
     try:
         EMSL_local(db_path=db_path).get_list_basis_available()
     except:
@@ -184,17 +184,16 @@ class EMSL_dump:
                 s = line[b + 1:e]
 
                 tup = eval(s)
-                url = tup[0]
+                xml_path = tup[0]
                 name = tup[1]
 
-                junkers = re.compile('[[" \]]')
-                elts = junkers.sub('', tup[3]).split(',')
+                elts = re.sub('[["\ \]]', '', tup[3]).split(',')
 
                 des = tup[-1]
 
-                if "-ecp" in url.lower():
+                if "-ecp" in xml_path.lower():
                     continue
-                d[name] = [name, url, des, elts]
+                d[name] = [name, xml_path, des, elts]
 
         """Tric for the unicity of the name"""
         array = [d[key] for key in d]
@@ -203,20 +202,6 @@ class EMSL_dump:
         print len(array_sort), "basisset will be download"
 
         return array_sort
-
-    def create_url(self, url, name, elts):
-        """Create the adequate url to get the basis data"""
-
-        elts_string = " ".join(elts)
-
-        path = "https://bse.pnl.gov:443/bse/portal/user/anon/js_peid/11535052407933/action/portlets.BasisSetAction/template/courier_content/panel/Main/"
-        path += "/eventSubmit_doDownload/true"
-        path += "?bsurl=" + url
-        path += "&bsname=" + name
-        path += "&elts=" + elts_string
-        path += "&format=" + self.format
-        path += "&minimize=" + self.contraction
-        return path
 
     def basis_data_row_to_array(self, data, name, des, elts):
         """Parse the basis data raw html to get a nice tuple"""
@@ -279,12 +264,19 @@ class EMSL_dump:
         def worker():
             """get a Job from the q_in, do stuff, when finish put it in the q_out"""
             while True:
-                [name, url, des, elts] = q_in.get()
-                url = self.create_url(url, name, elts)
+                [name, path_xml, des, elts] = q_in.get()
+
+                url = "https://bse.pnl.gov:443/bse/portal/user/anon/js_peid/11535052407933/action/portlets.BasisSetAction/template/courier_content/panel/Main/"
+                url += "/eventSubmit_doDownload/true"
+
+                params = {'bsurl': path_xml, 'bsname': name,
+                          'elts': " ".join(elts),
+                          'format': self.format,
+                          'minimize': self.contraction}
 
                 attemps = 0
                 while attemps < attemps_max:
-                    text = self.requests.get(url).text
+                    text = self.requests.get(url, params=params).text
                     try:
                         basis_data = self.basis_data_row_to_array(
                             text, name, des, elts)
@@ -294,15 +286,16 @@ class EMSL_dump:
                         attemps += 1
 
                 try:
-                    q_out.put(([name, url, des, elts], basis_data))
+                    q_out.put(([name, path_xml, des, elts], basis_data))
                     q_in.task_done()
                 except:
-                    print name, url, des
+                    if debug:
+                        print "Fail on q_out.put", name, path_xml, des
                     raise
 
         def enqueue():
-            for [name, url, des, elts] in list_basis_array:
-                q_in.put(([name, url, des, elts]))
+            for [name, path_xml, des, elts] in list_basis_array:
+                q_in.put(([name, path_xml, des, elts]))
 
             return 0
 
@@ -318,7 +311,7 @@ class EMSL_dump:
         nb_basis = len(list_basis_array)
 
         for i in range(nb_basis):
-            [name, url, des, elts], basis_data = q_out.get()
+            [name, path_xml, des, elts], basis_data = q_out.get()
 
             try:
                 c.executemany(
@@ -327,8 +320,7 @@ class EMSL_dump:
 
                 print '{:>3}'.format(i + 1), "/", nb_basis, name
             except:
-                print '{:>3}'.format(i + 1), "/", nb_basis, name, "fail",
-                print '   ', [url, des, elts]
+                print '{:>3}'.format(i + 1), "/", nb_basis, name, "fail"
                 raise
         conn.close()
 
