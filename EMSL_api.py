@@ -36,35 +36,27 @@ import os
 
 from src.docopt import docopt
 from src.EMSL_utility import EMSL_dump
-from src.EMSL_utility import format_dict
-from src.EMSL_utility import EMSL_local
+from src.EMSL_utility import EMSL_local, checkSQLite3
 
 if __name__ == '__main__':
 
     arguments = docopt(__doc__, version='EMSL Api ' + version)
 
+    # ___
+    #  |  ._  o _|_
+    # _|_ | | |  |_
+    #
+
     if arguments["--db_path"]:
         db_path = arguments["--db_path"]
     else:
-        import os
         db_path = os.path.dirname(__file__) + "/db/Gamess-us.db"
 
-    # Check if db file is readable
-    if not os.access(db_path,os.R_OK):
-        print >>sys.stderr, "Db file %s is not readable"%(db_path)
-        sys.exit(1)
-
-    # Check if the file system allows I/O on sqlite3 (lustre)
-    # If not, copy on /dev/shm and remove after opening
+    # Check the db
     try:
-        EMSL_local(db_path=db_path).get_list_basis_available([])
+        db_path, db_path_changed = checkSQLite3(db_path)
     except:
-        new_db_path = "/dev/shm/%d.db"%(os.getpid())
-        os.system("cp %s %s"%(db_path,new_db_path))
-        db_path = new_db_path
-        # try again to check
-        EMSL_local(db_path=db_path).get_list_basis_available([])
-
+        sys.exit(1)
 
     # _     _     _    ______           _
     #| |   (_)   | |   | ___ \         (_)
@@ -106,7 +98,7 @@ if __name__ == '__main__':
         basis_name = arguments["--basis"]
         elts = arguments["--atom"]
 
-        l = e.get_basis(basis_name, elts,arguments["--with_l"])
+        l = e.get_basis(basis_name, elts, arguments["--with_l"])
         str_ = "\n\n".join(l) + "\n"
 
         if arguments["--save"]:
@@ -130,7 +122,8 @@ if __name__ == '__main__':
     #| |___| \__ \ |_  | || (_) | |  | | | | | | (_| | |_\__ \
     #\_____/_|___/\__| |_| \___/|_|  |_| |_| |_|\__,_|\__|___/
     if arguments["list_formats"]:
-        for i in format_dict:
+        e = EMSL_dump()
+        for i in e.get_list_format():
             print i
 
     # _____                _             _ _
@@ -153,7 +146,11 @@ if __name__ == '__main__':
             contraction=contraction)
         e.new_db()
 
+     #  _
+     # /  |  _   _. ._  o ._   _
+     # \_ | (/_ (_| | | | | | (_|
+     #                         _|
 
     # Clean up on exit
-    os.system("rm -f /dev/shm/%d.db"%(os.getpid()))
-
+    if db_path_changed:
+        os.system("rm -f /dev/shm/%d.db" % (os.getpid()))

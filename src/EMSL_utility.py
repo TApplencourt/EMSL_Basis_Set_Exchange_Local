@@ -8,15 +8,56 @@ import time
 
 debug = True
 
-elt_path = os.path.dirname(sys.argv[0]) + "/src/elts_abrev.dat"
 
-with open(elt_path, "r") as f:
-    data = f.readlines()
+def checkSQLite3(db_path):
 
-dict_ele = dict()
-for i in data:
-    l = i.split("-")
-    dict_ele[l[1].strip().lower()] = l[2].strip().lower()
+    from os.path import isfile, getsize
+
+    # Check if db file is readable
+    if not os.access(db_path, os.R_OK):
+        print >>sys.stderr, "Db file %s is not readable" % (db_path)
+        raise IOError
+
+    if not isfile(db_path):
+        print >>sys.stderr, "Db file %s is not... a file!" % (db_path)
+        raise IOError
+
+    if getsize(db_path) < 100:  # SQLite database file header is 100 bytes
+        print >>sys.stderr, "Db file %s is not a SQLite file!" % (db_path)
+        raise IOError
+
+    with open(db_path, 'rb') as fd:
+        header = fd.read(100)
+
+    if header[:16] != 'SQLite format 3\x00':
+        print >>sys.stderr, "Db file %s is not in SQLiteFormat3!" % (db_path)
+        raise IOError
+
+    # Check if the file system allows I/O on sqlite3 (lustre)
+    # If not, copy on /dev/shm and remove after opening
+    try:
+        EMSL_local(db_path=db_path).get_list_basis_available()
+    except sqlite3.OperationalError:
+        print >>sys.stdrerr, "I/O Error for you file system"
+        print >>sys.stderr, "Try some fixe"
+        new_db_path = "/dev/shm/%d.db" % (os.getpid())
+        os.system("cp %s %s" % (db_path, new_db_path))
+        db_path = new_db_path
+    else:
+        changed = False
+        return db_path, changed
+
+    #Try again to check
+    try:
+        EMSL_local(db_path=db_path).get_list_basis_available()
+    except:
+        print >>sys.stderr, "Sorry..."
+        os.system("rm -f /dev/shm/%d.db" % (os.getpid()))
+        raise
+    else:
+        print >>sys.stderr, "Working !"
+        changed = True
+        return db_path, changed
 
 
 def install_with_pip(name):
@@ -54,11 +95,27 @@ def cond_sql_or(table_name, l_value):
 
 class EMSL_dump:
 
+    format_dict = {"g94": "Gaussian94",
+                   "gamess-us": "GAMESS-US",
+                   "gamess-uk": "GAMESS-UK",
+                   "turbomole": "Turbomole",
+                   "tx93": "TX93",
+                   "molpro": "Molpro",
+                   "molproint": "MolproInt",
+                   "hondo": "Hondo",
+                   "supermolecule": "SuperMolecule",
+                   "molcas": "Molcas",
+                   "hyperchem": "HyperChem",
+                   "dalton": "Dalton",
+                   "demon-ks": "deMon-KS",
+                   "demon2k": "deMon2k",
+                   "aces2": "AcesII"
+                   }
+
     def __init__(self, db_path=None, format="GAMESS-US", contraction="True"):
         self.db_path = db_path
         self.format = format
         self.contraction = str(contraction)
-
         try:
             import requests
         except:
@@ -67,9 +124,26 @@ class EMSL_dump:
         finally:
             self.requests = requests
 
+    def get_list_format(self):
+        """List all the format available in EMSL"""
+        return self.format_dict
+
     def set_db_path(self, path):
         """Define the database path"""
         self.db_path = path
+
+    def get_dict_ele(self):
+        """A dict of element"""
+        elt_path = os.path.dirname(sys.argv[0]) + "/src/elts_abrev.dat"
+
+        with open(elt_path, "r") as f:
+            data = f.readlines()
+
+        dict_ele = dict()
+        for i in data:
+            l = i.split("-")
+            dict_ele[l[1].strip().lower()] = l[2].strip().lower()
+        return dict_ele
 
     def dwl_basis_list_raw(self):
         print "Download all the name available in EMSL. It can take some time.",
@@ -161,6 +235,8 @@ class EMSL_dump:
             data = data.replace("D-", "E-")
 
             data = data[b + 5:e - 1].split('\n\n')
+
+            dict_ele = self.get_dict_ele()
 
             for (elt, data_elt) in zip(elts, data):
 
@@ -399,26 +475,6 @@ class EMSL_local:
             l_data.append("\n".join(l_line))
 
         return l_data
-
-
-format_dict = \
-    {
-        "g94": "Gaussian94",
-        "gamess-us": "GAMESS-US",
-        "gamess-uk": "GAMESS-UK",
-        "turbomole": "Turbomole",
-        "tx93": "TX93",
-        "molpro": "Molpro",
-        "molproint": "MolproInt",
-        "hondo": "Hondo",
-        "supermolecule": "SuperMolecule",
-        "molcas": "Molcas",
-        "hyperchem": "HyperChem",
-        "dalton": "Dalton",
-        "demon-ks": "deMon-KS",
-        "demon2k": "deMon2k",
-        "aces2": "AcesII",
-    }
 
 if __name__ == "__main__":
 
