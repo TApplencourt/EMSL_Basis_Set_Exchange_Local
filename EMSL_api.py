@@ -27,9 +27,14 @@ Options:
 
 <db_path> is the path to the SQLite3 file containing the Basis sets.
 By default is $EMSL_API_ROOT/db/Gausian_uk.db
+
+Example of use:
+    ./EMSL_api.py list_basis --atom Al --atom U
+    ./EMSL_api.py list_atoms --basis ANO-RCC
+    ./EMSL_api.py get_basis_data --basis 3-21++G*
 """
 
-version = "0.2.0"
+version = "0.2.2"
 
 import sys
 import os
