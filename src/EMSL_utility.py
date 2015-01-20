@@ -6,7 +6,7 @@ import sys
 import os
 import time
 
-debug = False
+debug = True
 
 
 def checkSQLite3(db_path):
@@ -189,7 +189,7 @@ class EMSL_dump:
 
                 elts = re.sub('[["\ \]]', '', tup[3]).split(',')
 
-                des = tup[-1]
+                des = re.sub('\s+', ' ', tup[-1])
 
                 if "-ecp" in xml_path.lower():
                     continue
@@ -229,18 +229,20 @@ class EMSL_dump:
                 elt_long_exp = data_elt.split()[0].lower()
 
                 if "$" in data_elt:
-                    print "Eror",
+                    if debug:
+                        print "Eror",
                     raise Exception("WARNING not bad split")
 
                 if elt_long_th == elt_long_exp:
-                    d.append((name, des, elt, data_elt.strip()))
+                    d.append([elt, data_elt.strip()])
                 else:
-                    print "th", elt_long_th
-                    print "exp", elt_long_exp
-                    print "abv", elt
+                    if debug:
+                        print "th", elt_long_th
+                        print "exp", elt_long_exp
+                        print "abv", elt
                     raise Exception("WARNING not good ELEMENT")
 
-        return d
+        return [name, des, d]
 
     def create_sql(self, list_basis_array):
         """Create the sql from the list of basis available data"""
@@ -248,9 +250,32 @@ class EMSL_dump:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        # Create table
-        c.execute('''CREATE TABLE all_value
-                 (name text, description text, elt text, data text)''')
+        c.execute('''CREATE TABLE basis_tab(
+                            basis_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                name text,
+                         description text,
+                                UNIQUE(name)
+                  );''')
+
+        c.execute('''CREATE TABLE data_tab(
+                           basis_id INTEGER,
+                                elt TEXT,
+                               data TEXT,
+                    FOREIGN KEY(basis_id)
+                    REFERENCES basis_tab(basis_id)
+                    );''')
+
+        c.execute(''' CREATE VIEW output_tab AS
+                        SELECT basis_id,
+                               name,
+                               description,
+                               elt,
+                               data
+                        FROM   basis_tab
+                NATURAL JOIN   data_tab
+                    ''')
+
+        conn.commit()
 
         import Queue
         import threading
@@ -264,7 +289,7 @@ class EMSL_dump:
         def worker():
             """get a Job from the q_in, do stuff, when finish put it in the q_out"""
             while True:
-                [name, path_xml, des, elts] = q_in.get()
+                name, path_xml, des, elts = q_in.get()
 
                 url = "https://bse.pnl.gov:443/bse/portal/user/anon/js_peid/11535052407933/action/portlets.BasisSetAction/template/courier_content/panel/Main/"
                 url += "/eventSubmit_doDownload/true"
@@ -286,16 +311,16 @@ class EMSL_dump:
                         attemps += 1
 
                 try:
-                    q_out.put(([name, path_xml, des, elts], basis_data))
+                    q_out.put(basis_data)
                     q_in.task_done()
                 except:
                     if debug:
-                        print "Fail on q_out.put", name, path_xml, des
+                        print "Fail on q_out.put", basis_data
                     raise
 
         def enqueue():
             for [name, path_xml, des, elts] in list_basis_array:
-                q_in.put(([name, path_xml, des, elts]))
+                q_in.put([name, path_xml, des, elts])
 
             return 0
 
@@ -311,17 +336,30 @@ class EMSL_dump:
         nb_basis = len(list_basis_array)
 
         for i in range(nb_basis):
-            [name, path_xml, des, elts], basis_data = q_out.get()
+            name, des, d = q_out.get()
+            q_out.task_done()
 
             try:
+                c.execute(
+                    "INSERT INTO basis_tab(name,description) VALUES (?,?)", [
+                        name, des])
+                conn.commit()
+            except sqlite3.IntegrityError:
+                print '{:>3}'.format(i + 1), "/", nb_basis, name, "fail"
+
+            id_ = c.lastrowid
+            try:
                 c.executemany(
-                    "INSERT INTO all_value VALUES (?,?,?,?)", basis_data)
+                    "INSERT INTO data_tab VALUES (?,?,?)", [
+                        [id_] + k for k in d])
                 conn.commit()
 
                 print '{:>3}'.format(i + 1), "/", nb_basis, name
+
             except:
                 print '{:>3}'.format(i + 1), "/", nb_basis, name, "fail"
                 raise
+
         conn.close()
 
         q_in.join()
@@ -348,12 +386,12 @@ class EMSL_local:
 
         if not elts:
 
-            c.execute("SELECT DISTINCT name,description from all_value")
+            c.execute("SELECT DISTINCT name,description from basis_tab")
             data = c.fetchall()
 
         else:
             cmd = [
-                "SELECT name,description FROM all_value WHERE elt=?"] * len(elts)
+                "SELECT name,description FROM output_tab WHERE elt=?"] * len(elts)
             cmd = " INTERSECT ".join(cmd) + ";"
 
             c.execute(cmd, elts)
@@ -371,7 +409,7 @@ class EMSL_local:
         c = conn.cursor()
 
         c.execute(
-            "SELECT DISTINCT elt from all_value WHERE name=:name_us COLLATE NOCASE", {
+            "SELECT DISTINCT elt from output_tab WHERE name=:name_us COLLATE NOCASE", {
                 "name_us": basis_name})
 
         data = c.fetchall()
@@ -382,6 +420,8 @@ class EMSL_local:
         return data
 
     def get_basis(self, basis_name, elts=None, with_l=False):
+
+        import re
 
         def get_list_type(l_line):
             l = []
@@ -398,8 +438,6 @@ class EMSL_local:
             l[-1].append(i + 1)
             return l
 
-        import re
-
         #  __            _
         # /__  _ _|_   _|_ ._ _  ._ _     _  _. |
         # \_| (/_ |_    |  | (_) | | |   _> (_| |
@@ -412,7 +450,7 @@ class EMSL_local:
         else:
             cmd_ele = ""
 
-        c.execute('''SELECT DISTINCT data from all_value
+        c.execute('''SELECT DISTINCT data from output_tab
                    WHERE name="{basis_name}" COLLATE NOCASE
                    {cmd_ele}'''.format(basis_name=basis_name,
                                        cmd_ele=cmd_ele))

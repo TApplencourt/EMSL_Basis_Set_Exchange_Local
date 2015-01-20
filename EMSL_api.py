@@ -4,18 +4,18 @@
 """EMSL Api.
 
 Usage:
-  EMSL_api.py list_basis        [--atom=atom_name...]
-                                [--db_path=db_path]
-  EMSL_api.py list_atoms  --basis=basis_name
-                                [--db_path=db_path]
-  EMSL_api.py get_basis_data --basis=basis_name
-                                [--atom=atom_name...]
-                                [--db_path=db_path]
+  EMSL_api.py list_basis        [--atom=<atom_name>...]
+                                [--db_path=<db_path>]
+  EMSL_api.py list_atoms  --basis=<basis_name>
+                                [--db_path=<db_path>]
+  EMSL_api.py get_basis_data --basis=<basis_name>
+                                [--atom=<atom_name>...]
+                                [--db_path=<db_path>]
                                 [--with_l]
-                                [(--save [--path=path])]
+                                [(--save [--path=<path>])]
   EMSL_api.py list_formats
-  EMSL_api.py create_db      --db_path=db_path
-                             --format=format
+  EMSL_api.py create_db      --db_path=<db_path>
+                             --format=<format>
                              [--no-contraction]
   EMSL_api.py (-h | --help)
   EMSL_api.py --version
@@ -59,13 +59,13 @@ if __name__ == '__main__':
     except:
         sys.exit(1)
 
-    # _     _     _    ______           _
-    #| |   (_)   | |   | ___ \         (_)
-    #| |    _ ___| |_  | |_/ / __ _ ___ _ ___
-    #| |   | / __| __| | ___ \/ _` / __| / __|
-    #| |___| \__ \ |_  | |_/ / (_| \__ \ \__ \
-    #\_____/_|___/\__| \____/ \__,_|___/_|___/
-    #
+    #  _     _     _    ______           _
+    # | |   (_)   | |   | ___ \         (_)
+    # | |    _ ___| |_  | |_/ / __ _ ___ _ ___
+    # | |   | / __| __| | ___ \/ _` / __| / __|
+    # | |___| \__ \ |_  | |_/ / (_| \__ \ \__ \
+    # \_____/_|___/\__| \____/ \__,_|___/_|___/
+
     if arguments["list_basis"]:
         e = EMSL_local(db_path=db_path)
 
@@ -75,12 +75,12 @@ if __name__ == '__main__':
         for name, des in l:
             print name, "|", des
 
-    # _     _     _     _____ _                           _
-    #| |   (_)   | |   |  ___| |                         | |
-    #| |    _ ___| |_  | |__ | | ___ _ __ ___   ___ _ __ | |_ ___
-    #| |   | / __| __| |  __|| |/ _ \ '_ ` _ \ / _ \ '_ \| __/ __|
-    #| |___| \__ \ |_  | |___| |  __/ | | | | |  __/ | | | |_\__ \
-    #\_____/_|___/\__| \____/|_|\___|_| |_| |_|\___|_| |_|\__|___/
+    #  _     _     _     _____ _                           _
+    # | |   (_)   | |   |  ___| |                         | |
+    # | |    _ ___| |_  | |__ | | ___ _ __ ___   ___ _ __ | |_ ___
+    # | |   | / __| __| |  __|| |/ _ \ '_ ` _ \ / _ \ '_ \| __/ __|
+    # | |___| \__ \ |_  | |___| |  __/ | | | | |  __/ | | | |_\__ \
+    # \_____/_|___/\__| \____/|_|\___|_| |_| |_|\___|_| |_|\__|___/
     if arguments["list_atoms"]:
         e = EMSL_local(db_path=db_path)
 
@@ -88,12 +88,12 @@ if __name__ == '__main__':
         l = e.get_list_element_available(basis_name)
         print ", ".join(l)
 
-    #______           _           _       _
-    #| ___ \         (_)         | |     | |
-    #| |_/ / __ _ ___ _ ___    __| | __ _| |_ __ _
-    #| ___ \/ _` / __| / __|  / _` |/ _` | __/ _` |
-    #| |_/ / (_| \__ \ \__ \ | (_| | (_| | || (_| |
-    #\____/ \__,_|___/_|___/  \__,_|\__,_|\__\__,_|
+    # ______           _           _       _
+    # | ___ \         (_)         | |     | |
+    # | |_/ / __ _ ___ _ ___    __| | __ _| |_ __ _
+    # | ___ \/ _` / __| / __|  / _` |/ _` | __/ _` |
+    # | |_/ / (_| \__ \ \__ \ | (_| | (_| | || (_| |
+    # \____/ \__,_|___/_|___/  \__,_|\__,_|\__\__,_|
     if arguments["get_basis_data"]:
         e = EMSL_local(db_path=db_path)
         basis_name = arguments["--basis"]
@@ -116,23 +116,23 @@ if __name__ == '__main__':
         else:
             print str_
 
-    # _     _     _      __                           _
-    #| |   (_)   | |    / _|                         | |
-    #| |    _ ___| |_  | |_ ___  _ __ _ __ ___   __ _| |_ ___
-    #| |   | / __| __| |  _/ _ \| '__| '_ ` _ \ / _` | __/ __|
-    #| |___| \__ \ |_  | || (_) | |  | | | | | | (_| | |_\__ \
-    #\_____/_|___/\__| |_| \___/|_|  |_| |_| |_|\__,_|\__|___/
+    #  _     _     _      __                           _
+    # | |   (_)   | |    / _|                         | |
+    # | |    _ ___| |_  | |_ ___  _ __ _ __ ___   __ _| |_ ___
+    # | |   | / __| __| |  _/ _ \| '__| '_ ` _ \ / _` | __/ __|
+    # | |___| \__ \ |_  | || (_) | |  | | | | | | (_| | |_\__ \
+    # \_____/_|___/\__| |_| \___/|_|  |_| |_| |_|\__,_|\__|___/
     if arguments["list_formats"]:
         e = EMSL_dump()
         for i in e.get_list_format():
             print i
 
-    # _____                _             _ _
-    #/  __ \              | |           | | |
-    #| /  \/_ __ ___  __ _| |_ ___    __| | |__
-    #| |   | '__/ _ \/ _` | __/ _ \  / _` | '_ \
-    #| \__/\ | |  __/ (_| | ||  __/ | (_| | |_) |
-    # \____/_|  \___|\__,_|\__\___|  \__,_|_.__/
+    #  _____                _             _ _
+    # /  __ \              | |           | | |
+    # | /  \/_ __ ___  __ _| |_ ___    __| | |__
+    # | |   | '__/ _ \/ _` | __/ _ \  / _` | '_ \
+    # | \__/\ | |  __/ (_| | ||  __/ | (_| | |_) |
+    #  \____/_|  \___|\__,_|\__\___|  \__,_|_.__/
     if arguments["create_db"]:
         db_path = arguments["--db_path"]
         format = arguments["--format"]
@@ -149,11 +149,11 @@ if __name__ == '__main__':
             contraction=contraction)
         e.new_db()
 
-     #  _
-     # /  |  _   _. ._  o ._   _
-     # \_ | (/_ (_| | | | | | (_|
-     #                         _|
+    #  _
+    # /  |  _   _. ._  o ._   _
+    # \_ | (/_ (_| | | | | | (_|
+    #                         _|
 
     # Clean up on exit
-    if db_path_changed:
+    if not(arguments['create_db']) and db_path_changed:
         os.system("rm -f /dev/shm/%d.db" % (os.getpid()))
