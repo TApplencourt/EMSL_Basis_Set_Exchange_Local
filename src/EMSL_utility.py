@@ -231,7 +231,7 @@ class EMSL_dump:
                 if "$" in data_elt:
                     if debug:
                         print "Eror",
-                    raise Exception("WARNING not bad split")
+                    raise Exception("WARNING bad split")
 
                 if elt_long_th == elt_long_exp:
                     d.append([elt, data_elt.strip()])
@@ -305,18 +305,21 @@ class EMSL_dump:
                     try:
                         basis_data = self.basis_data_row_to_array(
                             text, name, des, elts)
-                        break
                     except:
                         time.sleep(0.1)
                         attemps += 1
+                    else:
+                        break
 
                 try:
                     q_out.put(basis_data)
-                    q_in.task_done()
                 except:
                     if debug:
                         print "Fail on q_out.put", basis_data
                     raise
+                else:
+                    q_in.task_done()
+
 
         def enqueue():
             for [name, path_xml, des, elts] in list_basis_array:
