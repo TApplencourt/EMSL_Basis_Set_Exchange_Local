@@ -386,12 +386,15 @@ class EMSL_local:
 
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
+
         if not elts:
-            c.execute("""SELECT DISTINCT name,description, LENGTH(data)-LENGTH(REPLACE(data, X'0A', ''))
-                       FROM output_tab""")
+
+            c.execute("""SELECT DISTINCT name,description, LENGTH(data)- LENGTH(REPLACE(data, X'0A', ''))
+                         FROM output_tab""")
             data = c.fetchall()
+
         else:
-            cmd = ["""SELECT name,description, LENGTH(data)-LENGTH(REPLACE(data, X'0A', ''))
+            cmd = ["""SELECT name,description, LENGTH(data)- LENGTH(REPLACE(data, X'0A', ''))
                       FROM output_tab WHERE elt=?"""] * len(elts)
             cmd = " INTERSECT ".join(cmd) + ";"
 
