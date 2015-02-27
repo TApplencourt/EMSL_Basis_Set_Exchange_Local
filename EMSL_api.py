@@ -77,8 +77,8 @@ if __name__ == '__main__':
         elts = arguments["--atom"]
         l = e.get_list_basis_available(elts)
 
-        for name, des in l:
-            print name, "|", des
+        for name, des, n in l:
+            print name, "(",n,")","|", des
 
     #  _     _     _     _____ _                           _
     # | |   (_)   | |   |  ___| |                         | |
