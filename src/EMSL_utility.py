@@ -485,8 +485,6 @@ class EMSL_local:
                     body_s = []
                     body_p = []
 
-                    print l_line_raw
-
                     for i_l in l_line_raw[begin + 1:end]:
 
                         # one L =>  S & P
