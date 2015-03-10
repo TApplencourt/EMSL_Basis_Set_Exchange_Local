@@ -377,44 +377,120 @@ class EMSL_dump:
         self.create_sql(array_basis)
 
 
-class EMSL_local:
+def string_to_nb_mo(str_l):
 
+    assert len(str_l) == 1
+
+    d = {"S": 3,
+         "P": 5,
+         "D": 7,
+         "F": 9,
+         "L": 8}
+
+    if str_l in d:
+        return d[str_l]
+    # ord("G") = 72 and ord("Z") = 87
+    elif 72 <= ord(str_l) <= 87:
+        # orf("G") = 72 and l = 4 so ofset if 68
+        return 2 * (ord(str_l) - 68) + 1
+    else:
+        raise BaseException
+
+
+class EMSL_local:
+    """
+    All the method for using the EMSL db localy
+    """
     def __init__(self, db_path=None):
         self.db_path = db_path
 
-    def get_list_basis_available(self, elts=[]):
-
+    def get_list_basis_available(self, elts=[], average_mo_number=False):
+        """
+        return all the basis name who contant all the elts
+        """
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
+        # If not elts just get the disctinct name
+        # Else: 1) fetch for geting the run_id available
+        #       2) If average_mo_number:
+        #            * Get name,descripption,data
+        #            * Then parse it
+        #          Else Get name,description
+        #       3) Parse it
 
+        # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
+        # G e t i n g   B a s i s _ i d #
+        # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
         if not elts:
-
-            c.execute("""SELECT DISTINCT name,description, LENGTH(data)- LENGTH(REPLACE(data, X'0A', ''))
-                         FROM output_tab""")
-            data = c.fetchall()
-
+            cmd = """SELECT DISTINCT name, description FROM basis_tab"""
+            c.execute(cmd)
+            info = c.fetchall()
         else:
-            cmd = ["""SELECT name,description, LENGTH(data)- LENGTH(REPLACE(data, X'0A', ''))
-                      FROM output_tab WHERE elt=?"""] * len(elts)
-            cmd = " INTERSECT ".join(cmd) + ";"
-
+            cmd_ele = ["SELECT DISTINCT basis_id FROM data_tab WHERE elt=?"] * len(elts)
+            cmd = " INTERSECT ".join(cmd_ele) + ";"
             c.execute(cmd, elts)
-            data = c.fetchall()
 
-        data = [i[:] for i in data]
+            dump = [i[0] for i in c.fetchall()]
+            cmd_basis = " ".join(cond_sql_or("basis_id", dump))
+            cmd_ele = " ".join(cond_sql_or("elt", elts))
 
-        conn.close()
+            if average_mo_number:
+                cmd = """SELECT DISTINCT name,description,data
+                                 FROM output_tab"""
 
-        return data
+            else:
+                cmd = """SELECT DISTINCT name,description
+                                 FROM output_tab"""
+
+            cmd += " WHERE" + cmd_ele + " AND " + cmd_basis
+
+            c.execute(cmd)
+            info = c.fetchall()
+
+            conn.close()
+
+        # ~#~#~#~#~#~#~ #
+        # P a r s i n g #
+        # ~#~#~#~#~#~#~ #
+
+        dict_info = {}
+        # dict_info[name] = [description, nb_mo, nb_ele]
+
+        if average_mo_number:
+
+            for name, description, data in info:
+                nb_mo = 0
+                nb_ele = 0
+                for line in data.split("\n")[1:]:
+                    str_l = line.split()[0]
+                    try:
+                        nb_mo += string_to_nb_mo(str_l)
+                        nb_ele += 1
+                    except BaseException:
+                        pass
+
+                try:
+                    dict_info[name][1] += nb_mo
+                    dict_info[name][2] += 1
+                except:
+                    dict_info[name] = [description, nb_mo, nb_ele]
+
+        # ~#~#~#~#~#~ #
+        # R e t u r n #
+        # ~#~#~#~#~#~ #
+
+        if average_mo_number:
+            return[[k, v[0], v[1] / v[2]] for k, v in dict_info.iteritems()]
+        else:
+            return [i[:] for i in info]
 
     def get_list_element_available(self, basis_name):
 
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        c.execute(
-            "SELECT DISTINCT elt from output_tab WHERE name=:name_us COLLATE NOCASE", {
-                "name_us": basis_name})
+        str_ = "SELECT DISTINCT elt from output_tab WHERE name=:name_us COLLATE NOCASE"
+        c.execute(str_, {"name_us": basis_name})
 
         data = c.fetchall()
 
@@ -424,10 +500,20 @@ class EMSL_local:
         return data
 
     def get_basis(self, basis_name, elts=None, with_l=False):
-
+        """
+        Return the data from the basis set
+        """
         import re
 
         def get_list_type(l_line):
+            """
+            Return the begin and the end of all the type of orbital
+            Usefull for tranforming the L in S, P
+            output : [ [type, begin, end], ...]
+            """
+            # Example
+            # [[u'S', 1, 5], [u'L', 5, 9], [u'L', 9, 12], [u'D', 16, 18]]"
+
             l = []
             for i, line in enumerate(l_line):
 
@@ -440,6 +526,7 @@ class EMSL_local:
                         pass
 
             l[-1].append(i + 1)
+            print l
             return l
 
         #  __            _
@@ -476,6 +563,7 @@ class EMSL_local:
 
             l_line_raw = basis.split("\n")
 
+            # l_line_raw[0] containt the name of the Atom
             l_line = [l_line_raw[0]]
 
             for symmetry, begin, end in get_list_type(l_line_raw):

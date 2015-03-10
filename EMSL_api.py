@@ -6,6 +6,7 @@
 Usage:
   EMSL_api.py list_basis        [--atom=<atom_name>...]
                                 [--db_path=<db_path>]
+                                [--average_mo_number]
   EMSL_api.py list_atoms  --basis=<basis_name>
                                 [--db_path=<db_path>]
   EMSL_api.py get_basis_data --basis=<basis_name>
@@ -62,7 +63,7 @@ if __name__ == '__main__':
         if not(arguments['create_db']):
             db_path, db_path_changed = checkSQLite3(db_path)
     except:
-        sys.exit(1)
+        raise
 
     #  _     _     _    ______           _
     # | |   (_)   | |   | ___ \         (_)
@@ -75,10 +76,17 @@ if __name__ == '__main__':
         e = EMSL_local(db_path=db_path)
 
         elts = arguments["--atom"]
-        l = e.get_list_basis_available(elts)
 
-        for name, des, n in l:
-            print name, "(", n, ")", "|", des
+        amn = arguments["--average_mo_number"]
+
+        l = e.get_list_basis_available(elts, average_mo_number=amn)
+
+        if amn:
+            for name, des, avg in l:
+                print "{0} ({2}) | {1}".format(name, des, avg)
+        else:
+            for name, des in l:
+                print "{0} | {1}".format(name, des)
 
     #  _     _     _     _____ _                           _
     # | |   (_)   | |   |  ___| |                         | |
