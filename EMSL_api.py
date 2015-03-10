@@ -78,7 +78,7 @@ if __name__ == '__main__':
         l = e.get_list_basis_available(elts)
 
         for name, des, n in l:
-            print name, "(",n,")","|", des
+            print name, "(", n, ")", "|", des
 
     #  _     _     _     _____ _                           _
     # | |   (_)   | |   |  ___| |                         | |

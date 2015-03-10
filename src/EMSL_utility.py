@@ -485,8 +485,11 @@ class EMSL_local:
                     body_s = []
                     body_p = []
 
+                    print l_line_raw
+
                     for i_l in l_line_raw[begin + 1:end]:
 
+                        # one L =>  S & P
                         a = i_l.split()
 
                         common = "{:>3}".format(a[0])
@@ -495,8 +498,13 @@ class EMSL_local:
                         tail_s = common + "{:>23.7f}".format(float(a[2]))
                         body_s.append(tail_s)
 
-                        tail_p = common + "{:>23.7f}".format(float(a[3]))
-                        body_p.append(tail_p)
+                        # Is only a whan only 3 elements, coef for p == coef for s
+                        try:
+                            tail_p = common + "{:>23.7f}".format(float(a[3]))
+                        except IndexError:
+                            tail_p = tail_s
+                        finally:
+                            body_p.append(tail_p)
 
                     l_line += [l_line_raw[begin].replace("L", "S")]
                     l_line += body_s
