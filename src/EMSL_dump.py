@@ -29,6 +29,7 @@ def install_with_pip(name):
 
 
 class EMSL_dump:
+
     """
     This call implement all you need for download the EMSL and save it localy
     """
@@ -259,7 +260,6 @@ class EMSL_dump:
                     raise
                 else:
                     q_in.task_done()
-
 
         def enqueue():
             for [name, path_xml, des, elts] in list_basis_array:

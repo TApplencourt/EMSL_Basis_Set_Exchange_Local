@@ -91,6 +91,7 @@ def string_to_nb_mo(str_l):
 
 
 class EMSL_local:
+
     """
     All the method for using the EMSL db localy
     """
@@ -113,13 +114,13 @@ class EMSL_local:
         l = []
         for i, line in enumerate(atom_basis):
 
-                m = re.search(self.p, line)
-                if m:
-                    l.append([m.group(1), i])
-                    try:
-                        l[-2].append(i)
-                    except IndexError:
-                        pass
+            m = re.search(self.p, line)
+            if m:
+                l.append([m.group(1), i])
+                try:
+                    l[-2].append(i)
+                except IndexError:
+                    pass
 
         l[-1].append(i + 1)
         return l
@@ -305,7 +306,8 @@ class EMSL_local:
                         tail_s = common + "{:>23.7f}".format(float(a[2]))
                         body_s.append(tail_s)
 
-                        # Is only a whan only 3 elements, coef for p == coef for s
+                        # Is only a whan only 3 elements, coef for p == coef
+                        # for s
                         try:
                             tail_p = common + "{:>23.7f}".format(float(a[3]))
                         except IndexError:

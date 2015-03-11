@@ -59,12 +59,20 @@ class Pattern(object):
         either = [list(child.children) for child in transform(self).children]
         for case in either:
             for e in [child for child in case if case.count(child) > 1]:
-                if type(e) is Argument or type(e) is Option and e.argcount:
+                if isinstance(
+                        e,
+                        Argument) or isinstance(
+                        e,
+                        Option) and e.argcount:
                     if e.value is None:
                         e.value = []
-                    elif type(e.value) is not list:
+                    elif not isinstance(e.value, list):
                         e.value = e.value.split()
-                if type(e) is Command or type(e) is Option and e.argcount == 0:
+                if isinstance(
+                        e,
+                        Command) or isinstance(
+                        e,
+                        Option) and e.argcount == 0:
                     e.value = 0
         return self
 
@@ -84,10 +92,10 @@ def transform(pattern):
         if any(t in map(type, children) for t in parents):
             child = [c for c in children if type(c) in parents][0]
             children.remove(child)
-            if type(child) is Either:
+            if isinstance(child, Either):
                 for c in child.children:
                     groups.append([c] + children)
-            elif type(child) is OneOrMore:
+            elif isinstance(child, OneOrMore):
                 groups.append(child.children * 2 + children)
             else:
                 groups.append(child.children + children)
@@ -117,10 +125,10 @@ class LeafPattern(Pattern):
         left_ = left[:pos] + left[pos + 1:]
         same_name = [a for a in collected if a.name == self.name]
         if type(self.value) in (int, list):
-            if type(self.value) is int:
+            if isinstance(self.value, int):
                 increment = 1
             else:
-                increment = ([match.value] if type(match.value) is str
+                increment = ([match.value] if isinstance(match.value, str)
                              else match.value)
             if not same_name:
                 match.value = increment
@@ -151,7 +159,7 @@ class Argument(LeafPattern):
 
     def single_match(self, left):
         for n, pattern in enumerate(left):
-            if type(pattern) is Argument:
+            if isinstance(pattern, Argument):
                 return n, Argument(self.name, pattern.value)
         return None, None
 
@@ -169,7 +177,7 @@ class Command(Argument):
 
     def single_match(self, left):
         for n, pattern in enumerate(left):
-            if type(pattern) is Argument:
+            if isinstance(pattern, Argument):
                 if pattern.value == self.name:
                     return n, Command(self.name, True)
                 else:
