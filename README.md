@@ -25,10 +25,12 @@ If you plan to download manually some database -not using the pre existing one- 
 EMSL Api.
 
 Usage:
-  EMSL_api.py list_basis        [--atom=<atom_name>...]
-                                [--db_path=<db_path>]
+  EMSL_api.py list_basis  [--basis=<basis_name>...]
+                          [--atom=<atom_name>...]
+                          [--db_path=<db_path>]
+                          [--average_mo_number]
   EMSL_api.py list_atoms  --basis=<basis_name>
-                                [--db_path=<db_path>]
+                          [--db_path=<db_path>]
   EMSL_api.py get_basis_data --basis=<basis_name>
                                 [--atom=<atom_name>...]
                                 [--db_path=<db_path>]
@@ -48,6 +50,12 @@ Options:
 
 <db_path> is the path to the SQLite3 file containing the Basis sets.
 By default is $EMSL_API_ROOT/db/Gausian_uk.db
+
+Example of use:
+    ./EMSL_api.py list_basis --atom Al --atom U
+    ./EMSL_api.py list_basis --atom S --basis 'cc-pV*' --average_mo_number
+    ./EMSL_api.py list_atoms --basis ANO-RCC
+    ./EMSL_api.py get_basis_data --basis 3-21++G*
 ```
 ##Demonstration
 
