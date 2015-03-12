@@ -160,8 +160,8 @@ class EMSL_local:
         """
         return all the basis name who contant all the elts
         """
-        # If not elts just get the disctinct name
-        # Else: 1) fetch for geting the run_id available
+        # If not elts just get the distinct name
+        # Else: 1) fetch for geting all the run_id whos satisfy the condition
         #       2) If average_mo_number:
         #            * Get name,descripption,data
         #            * Then parse it
@@ -180,9 +180,9 @@ class EMSL_local:
         # ~#~#~#~#~#~ #
 
         if basis:
-            cmd_basis = " ".join(cond_sql_or("name", basis, glob=True))
+            cmd_filter_basis = " ".join(cond_sql_or("name", basis, glob=True))
         else:
-            cmd_basis = "(1)"
+            cmd_filter_basis = "(1)"
 
         # Not Ets
         if not elts:
@@ -195,7 +195,7 @@ class EMSL_local:
                          FROM output_tab
                          WHERE {0}"""
 
-            cmd = cmd.format(cmd_basis)
+            cmd = cmd.format(cmd_filter_basis)
 
         else:
 
@@ -205,24 +205,25 @@ class EMSL_local:
 
             str_ = """SELECT DISTINCT basis_id
                       FROM output_tab
-                      WHERE elt=? AND {0}""".format(cmd_basis)
+                      WHERE elt=? AND {0}""".format(cmd_filter_basis)
 
             cmd = " INTERSECT ".join([str_] * len(elts)) + ";"
             c.execute(cmd, elts)
 
-            dump = [i[0] for i in c.fetchall()]
-            cmd_basis = " ".join(cond_sql_or("basis_id", dump))
-            cmd_ele = " ".join(cond_sql_or("elt", elts))
+            l_basis_id = [i[0] for i in c.fetchall()]
 
             # ~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
             # C r e a t e _ t h e _ c m d #
             # ~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
 
+            cmd_filter_basis = " ".join(cond_sql_or("basis_id", l_basis_id))
+            cmd_filter_ele = " ".join(cond_sql_or("elt", elts))
+
             column_to_fech = "name, description"
             if average_mo_number:
                 column_to_fech += ", data"
 
-            filter_where = cmd_ele + " AND " + cmd_basis
+            filter_where = cmd_filter_ele + " AND " + cmd_filter_basis
 
             cmd = """SELECT DISTINCT {0}
                      FROM output_tab
@@ -314,12 +315,11 @@ class EMSL_local:
         # F i l t e r #
         # ~#~#~#~#~#~ #
 
-        cmd_ele = " ".join(cond_sql_or("elt", elts)) if elts else "(1)"
+        cmd_filter_ele = " ".join(cond_sql_or("elt", elts)) if elts else "(1)"
 
         c.execute('''SELECT DISTINCT data from output_tab
-                     WHERE name="{basis_name}"
-                     AND  {cmd_ele}'''.format(basis_name=basis_name,
-                                              cmd_ele=cmd_ele))
+                     WHERE name="{0}"
+                     AND  {1}'''.format(basis_name, cmd_filter_ele))
 
         # We need to take i[0] because fetchall return a tuple [(value),...]
         l_atom_basis = [i[0].strip() for i in c.fetchall()]
