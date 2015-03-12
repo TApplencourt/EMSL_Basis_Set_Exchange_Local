@@ -76,16 +76,14 @@ def string_to_nb_mo(str_l):
 
     d = {"S": 3,
          "P": 5,
-         "D": 7,
-         "F": 9,
-         "L": 8}
+         "D": 7}
 
     if str_l in d:
         return d[str_l]
-    # ord("G") = 72 and ord("Z") = 87
-    elif 72 <= ord(str_l) <= 87:
-        # orf("G") = 72 and l = 4 so ofset if 68
-        return 2 * (ord(str_l) - 68) + 1
+    # ord("F") = 70 and ord("Z") = 87
+    elif 70 <= ord(str_l) <= 87:
+        # ord("F") = 70 and l = 4 so ofset if 66
+        return 2 * (ord(str_l) - 66) + 1
     else:
         raise BaseException
 
