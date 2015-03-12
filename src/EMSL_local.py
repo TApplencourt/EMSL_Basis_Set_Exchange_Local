@@ -223,13 +223,12 @@ class EMSL_local:
             if average_mo_number:
                 column_to_fech += ", data"
 
-            filter_where = cmd_filter_ele + " AND " + cmd_filter_basis
+            filter_where = " ({}) AND ({})".format(cmd_filter_ele, cmd_filter_basis)
 
             cmd = """SELECT DISTINCT {0}
                      FROM output_tab
                      WHERE {1}
                      ORDER BY name""".format(column_to_fech, filter_where)
-
         # ~#~#~#~#~ #
         # F e t c h #
         # ~#~#~#~#~ #
@@ -242,6 +241,7 @@ class EMSL_local:
         # ~#~#~#~#~#~#~ #
         # P a r s i n g #
         # ~#~#~#~#~#~#~ #
+        # If average_mo_number is asking
 
         from collections import OrderedDict
         dict_info = OrderedDict()
