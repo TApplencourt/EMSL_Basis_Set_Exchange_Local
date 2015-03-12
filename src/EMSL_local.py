@@ -59,46 +59,99 @@ def checkSQLite3(db_path):
 
 
 def cond_sql_or(table_name, l_value, glob=False):
+    """Take a table_name, a list of value and create the sql or combande"""
 
     opr = "GLOB" if glob else "="
 
-    l = []
-    dmy = " OR ".join(['%s %s "%s"' % (table_name, opr, i) for i in l_value])
-    if dmy:
-        l.append("(%s)" % dmy)
-
-    return l
+    return [" OR ".join(['{} {} "{}"'.format(table_name,
+                                             opr,
+                                             val) for val in l_value])]
 
 
-def string_to_nb_mo(str_l):
+def string_to_nb_mo(str_type):
+    """Take a string and return the nb of orbital"""
+    assert len(str_type) == 1
 
-    assert len(str_l) == 1
+    d = {"S": 1,
+         "P": 2,
+         "D": 3}
 
-    d = {"S": 3,
-         "P": 5,
-         "D": 7}
-
-    if str_l in d:
-        return d[str_l]
+    if str_type in d:
+        return 2 * d[str_type] + 1
     # ord("F") = 70 and ord("Z") = 87
-    elif 70 <= ord(str_l) <= 87:
+    elif 70 <= ord(str_type) <= 87:
         # ord("F") = 70 and l = 4 so ofset if 66
-        return 2 * (ord(str_l) - 66) + 1
+        return 2 * (ord(str_type) - 66) + 1
     else:
         raise BaseException
 
 
+#  _
+# /  |_   _   _ |        _. | o  _| o _|_
+# \_ | | (/_ (_ |<   \/ (_| | | (_| |  |_ \/
+#                                         /
+
+def check_gamess(str_type):
+    """Check is the orbital type is handle by gamess"""
+
+    assert len(str_type) == 1
+
+    if str_type in "S P D".split():
+        return True
+    elif str_type > "L":
+        raise BaseException
+    else:
+        return True
+
+
+def check_NWChem(str_type):
+    """Check is the orbital type is handle by gamess"""
+
+    assert len(str_type) == 1
+
+    if str_type in "S P D".split():
+        return True
+    elif str_type > "I" or str_type in "K L M".split():
+        raise BaseException
+    else:
+        return True
+
+
+#  _       __
+# |_ |\/| (_  |    |   _   _  _. |
+# |_ |  | __) |_   |_ (_) (_ (_| |
+#
 class EMSL_local:
 
     """
     All the method for using the EMSL db localy
     """
 
-    import re
-
     def __init__(self, db_path=None):
         self.db_path = db_path
         self.p = re.compile(ur'^(\w)\s+\d+\b')
+
+    def get_list_type(self, atom_basis):
+        """
+        Return the begin and the end of all the type of orbital
+        input: atom_basis = [name, ]
+        output: [ [type, begin, end], ...]
+        """
+        # Example
+        # [[u'S', 1, 5], [u'L', 5, 9], [u'L', 9, 12], [u'D', 16, 18]]"
+
+        l = []
+        for i, line in enumerate(atom_basis):
+            m = re.search(self.p, line)
+            if m:
+                l.append([m.group(1), i])
+                try:
+                    l[-2].append(i)
+                except IndexError:
+                    pass
+
+        l[-1].append(i + 1)
+        return l
 
     def get_list_basis_available(self,
                                  elts=[],
@@ -122,17 +175,17 @@ class EMSL_local:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
-        # G e t i n g   B a s i s _ i d #
-        # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
+        # ~#~#~#~#~#~ #
+        # F i l t e r #
+        # ~#~#~#~#~#~ #
 
         if basis:
             cmd_basis = " ".join(cond_sql_or("name", basis, glob=True))
         else:
             cmd_basis = "(1)"
 
+        # Not Ets
         if not elts:
-
             if not average_mo_number:
                 cmd = """SELECT DISTINCT name, description
                          FROM basis_tab
@@ -145,6 +198,11 @@ class EMSL_local:
             cmd = cmd.format(cmd_basis)
 
         else:
+
+            # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
+            # G e t t i n g _ B a s i s I d #
+            # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
+
             str_ = """SELECT DISTINCT basis_id
                       FROM output_tab
                       WHERE elt=? AND {0}""".format(cmd_basis)
@@ -156,19 +214,24 @@ class EMSL_local:
             cmd_basis = " ".join(cond_sql_or("basis_id", dump))
             cmd_ele = " ".join(cond_sql_or("elt", elts))
 
+            # ~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
+            # C r e a t e _ t h e _ c m d #
+            # ~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
+
+            column_to_fech = "name, description"
+            if average_mo_number:
+                column_to_fech += ", data"
+
+            filter_where = cmd_ele + " AND " + cmd_basis
+
             cmd = """SELECT DISTINCT {0}
                      FROM output_tab
                      WHERE {1}
-                     ORDER BY name"""
+                     ORDER BY name""".format(column_to_fech, filter_where)
 
-            if average_mo_number:
-                column = "name, description, data"
-            else:
-                column = "name, description"
-
-            filter_ = cmd_ele + " AND " + cmd_basis
-
-            cmd = cmd.format(column, filter_)
+        # ~#~#~#~#~ #
+        # F e t c h #
+        # ~#~#~#~#~ #
 
         c.execute(cmd)
         info = c.fetchall()
@@ -184,14 +247,11 @@ class EMSL_local:
         # Description : dict_info[name] = [description, nb_mo, nb_ele]
 
         if average_mo_number:
-            for name, description, data in info:
+            for name, description, atom_basis in info:
                 nb_mo = 0
-                for line in data.split("\n")[1:]:
-                    str_l = line.split()[0]
-                    try:
-                        nb_mo += string_to_nb_mo(str_l)
-                    except BaseException:
-                        pass
+
+                for type_, _, _ in self.get_list_type(atom_basis.split("\n")):
+                    nb_mo += string_to_nb_mo(type_)
 
                 try:
                     dict_info[name][1] += nb_mo
@@ -210,30 +270,49 @@ class EMSL_local:
 
     def get_list_element_available(self, basis_name):
 
+        # ~#~#~#~ #
+        # I n i t #
+        # ~#~#~#~ #
+
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        str_ = "SELECT DISTINCT elt from output_tab WHERE name=:name_us COLLATE NOCASE"
+        # ~#~#~#~#~#~ #
+        # F i l t e r #
+        # ~#~#~#~#~#~ #
+
+        str_ = """SELECT DISTINCT elt
+                  FROM output_tab
+                  WHERE name=:name_us COLLATE NOCASE"""
+
+        # ~#~#~#~#~ #
+        # F e t c h #
+        # ~#~#~#~#~ #
+
         c.execute(str_, {"name_us": basis_name})
-
-        data = c.fetchall()
-
-        data = [str(i[0]) for i in data]
-
         conn.close()
-        return data
 
-    def get_basis(self, basis_name, elts=None):
+        # ~#~#~#~#~#~ #
+        # R e t u r n #
+        # ~#~#~#~#~#~ #
+
+        return [str(i[0]) for i in c.fetchall()]
+
+    def get_basis(self, basis_name, elts=None, checking=None):
         """
         Return the data from the basis set
         """
 
-        #  __            _
-        # /__  _ _|_   _|_ ._ _  ._ _     _  _. |
-        # \_| (/_ |_    |  | (_) | | |   _> (_| |
-        #                                     |
+        # ~#~#~#~ #
+        # I n i t #
+        # ~#~#~#~ #
+
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
+
+        # ~#~#~#~#~#~ #
+        # F i l t e r #
+        # ~#~#~#~#~#~ #
 
         cmd_ele = " ".join(cond_sql_or("elt", elts)) if elts else "(1)"
 
@@ -243,10 +322,25 @@ class EMSL_local:
                                               cmd_ele=cmd_ele))
 
         # We need to take i[0] because fetchall return a tuple [(value),...]
-        l_data_raw = [i[0].strip() for i in c.fetchall()]
+        l_atom_basis = [i[0].strip() for i in c.fetchall()]
         conn.close()
 
-        return l_data_raw
+        # ~#~#~#~#~ #
+        # C h e c k #
+        # ~#~#~#~#~ #
+
+        checking = False
+
+        if checking:
+            for atom_basis in l_atom_basis:
+                for type_, _, _ in self.get_list_type(atom_basis.split("\n")):
+                    check_gamess(type_)
+
+        # ~#~#~#~#~#~ #
+        # R e t u r n #
+        # ~#~#~#~#~#~ #
+
+        return l_atom_basis
 
 if __name__ == "__main__":
 

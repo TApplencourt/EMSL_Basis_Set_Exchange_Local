@@ -11,9 +11,9 @@ Usage:
   EMSL_api.py list_atoms  --basis=<basis_name>
                           [--db_path=<db_path>]
   EMSL_api.py get_basis_data --basis=<basis_name>
-                                [--atom=<atom_name>...]
-                                [--db_path=<db_path>]
-                                [(--save [--path=<path>])]
+                             [--atom=<atom_name>...]
+                             [--db_path=<db_path>]
+                             [(--save [--path=<path>])]
   EMSL_api.py list_formats
   EMSL_api.py create_db      --db_path=<db_path>
                              --format=<format>
