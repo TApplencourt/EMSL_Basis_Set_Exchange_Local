@@ -161,10 +161,9 @@ if __name__ == '__main__':
             sys.exit(1)
         contraction = not arguments["--no-contraction"]
 
-        e = EMSL_dump(
-            db_path=db_path,
-            format=format_dict[format],
-            contraction=contraction)
+        e = EMSL_dump(db_path=db_path,
+                      format=format_dict[format],
+                      contraction=contraction)
         e.new_db()
 
     #  _
