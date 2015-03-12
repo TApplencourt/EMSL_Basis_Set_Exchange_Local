@@ -13,7 +13,6 @@ Usage:
   EMSL_api.py get_basis_data --basis=<basis_name>
                                 [--atom=<atom_name>...]
                                 [--db_path=<db_path>]
-                                [--with_l]
                                 [(--save [--path=<path>])]
   EMSL_api.py list_formats
   EMSL_api.py create_db      --db_path=<db_path>
@@ -113,10 +112,10 @@ if __name__ == '__main__':
     # \____/ \__,_|___/_|___/  \__,_|\__,_|\__\__,_|
     if arguments["get_basis_data"]:
         e = EMSL_local(db_path=db_path)
-        basis_name = arguments["--basis"]
+        basis_name = arguments["--basis"][0]
         elts = arguments["--atom"]
 
-        l = e.get_basis(basis_name, elts, arguments["--with_l"])
+        l = e.get_basis(basis_name, elts)
         str_ = "\n\n".join(l) + "\n"
 
         if arguments["--save"]:

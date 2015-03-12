@@ -102,29 +102,6 @@ class EMSL_local:
         self.db_path = db_path
         self.p = re.compile(ur'^(\w)\s+\d+\b')
 
-    def get_list_type(self, atom_basis):
-        """
-        Return the begin and the end of all the type of orbital
-        input: atom_basis = [name, ]
-        output: [ [type, begin, end], ...]
-        """
-        # Example
-        # [[u'S', 1, 5], [u'L', 5, 9], [u'L', 9, 12], [u'D', 16, 18]]"
-
-        l = []
-        for i, line in enumerate(atom_basis):
-
-            m = re.search(self.p, line)
-            if m:
-                l.append([m.group(1), i])
-                try:
-                    l[-2].append(i)
-                except IndexError:
-                    pass
-
-        l[-1].append(i + 1)
-        return l
-
     def get_list_basis_available(self,
                                  elts=[],
                                  basis=[],
@@ -248,7 +225,7 @@ class EMSL_local:
         conn.close()
         return data
 
-    def get_basis(self, basis_name, elts=None, with_l=False):
+    def get_basis(self, basis_name, elts=None):
         """
         Return the data from the basis set
         """
@@ -260,72 +237,18 @@ class EMSL_local:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        if elts:
-            cmd_ele = "AND " + " ".join(cond_sql_or("elt", elts))
-        else:
-            cmd_ele = ""
+        cmd_ele = " ".join(cond_sql_or("elt", elts)) if elts else "(1)"
 
         c.execute('''SELECT DISTINCT data from output_tab
-                   WHERE name="{basis_name}" COLLATE NOCASE
-                   {cmd_ele}'''.format(basis_name=basis_name,
-                                       cmd_ele=cmd_ele))
+                     WHERE name="{basis_name}"
+                     AND  {cmd_ele}'''.format(basis_name=basis_name,
+                                              cmd_ele=cmd_ele))
 
-        l_data_raw = c.fetchall()
+        # We need to take i[0] because fetchall return a tuple [(value),...]
+        l_data_raw = [i[0].strip() for i in c.fetchall()]
         conn.close()
 
-        # |_|  _. ._   _| |  _    || | ||
-        # | | (_| | | (_| | (/_      |_
-        #
-
-        l_data = []
-
-        for data_raw in l_data_raw:
-
-            basis = data_raw[0].strip()
-
-            l_line_raw = basis.split("\n")
-
-            # l_line_raw[0] containt the name of the Atom
-            l_line = [l_line_raw[0]]
-
-            for symmetry, begin, end in self.get_list_type(l_line_raw):
-
-                if not(with_l) and symmetry in "L":
-
-                    body_s = []
-                    body_p = []
-
-                    for i_l in l_line_raw[begin + 1:end]:
-
-                        # one L =>  S & P
-                        a = i_l.split()
-
-                        common = "{:>3}".format(a[0])
-                        common += "{:>15.7f}".format(float(a[1]))
-
-                        tail_s = common + "{:>23.7f}".format(float(a[2]))
-                        body_s.append(tail_s)
-
-                        # Is only a whan only 3 elements, coef for p == coef
-                        # for s
-                        try:
-                            tail_p = common + "{:>23.7f}".format(float(a[3]))
-                        except IndexError:
-                            tail_p = tail_s
-                        finally:
-                            body_p.append(tail_p)
-
-                    l_line += [l_line_raw[begin].replace("L", "S")]
-                    l_line += body_s
-
-                    l_line += [l_line_raw[begin].replace("L", "P")]
-                    l_line += body_p
-                else:
-                    l_line += l_line_raw[begin:end]
-
-            l_data.append("\n".join(l_line))
-
-        return l_data
+        return l_data_raw
 
 if __name__ == "__main__":
 
