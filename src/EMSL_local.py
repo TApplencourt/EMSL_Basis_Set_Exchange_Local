@@ -298,7 +298,7 @@ class EMSL_local:
 
         return [str(i[0]) for i in c.fetchall()]
 
-    def get_basis(self, basis_name, elts=None, checking=None):
+    def get_basis(self, basis_name, elts=None, check_format=None):
         """
         Return the data from the basis set
         """
@@ -329,12 +329,20 @@ class EMSL_local:
         # C h e c k #
         # ~#~#~#~#~ #
 
-        checking = False
+        d_check = {"gamess": check_gamess,
+                   "NWChem": check_NWChem}
 
-        if checking:
+        if check_format:
+            try:
+                f = d_check[check_format]
+            except KeyError:
+                str_ = """This format is not handle. Chose one of : {}"""
+                print >>sys.stderr, str_.format(format(str(d_check.keys())))
+                sys.exit(1)
+
             for atom_basis in l_atom_basis:
                 for type_, _, _ in self.get_list_type(atom_basis.split("\n")):
-                    check_gamess(type_)
+                    f(type_)
 
         # ~#~#~#~#~#~ #
         # R e t u r n #

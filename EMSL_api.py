@@ -14,6 +14,7 @@ Usage:
                              [--atom=<atom_name>...]
                              [--db_path=<db_path>]
                              [(--save [--path=<path>])]
+                             [--check=<format>]
   EMSL_api.py list_formats
   EMSL_api.py create_db      --db_path=<db_path>
                              --format=<format>
@@ -115,8 +116,9 @@ if __name__ == '__main__':
         basis_name = arguments["--basis"][0]
         elts = arguments["--atom"]
 
-        l = e.get_basis(basis_name, elts)
-        str_ = "\n\n".join(l) + "\n"
+        l_atom_basis = e.get_basis(basis_name, elts, arguments["--check"])
+        # Add separation between atoms, and a empty last line
+        str_ = "\n\n".join(l_atom_basis) + "\n"
 
         if arguments["--save"]:
 
