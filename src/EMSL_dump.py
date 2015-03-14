@@ -74,7 +74,7 @@ class EMSL_dump:
         self.db_path = path
 
     def get_dict_ele(self):
-        """A dict of element"""
+        """Return dict[atom]=[abreviation]"""
         elt_path = os.path.dirname(sys.argv[0]) + "/src/elts_abrev.dat"
 
         with open(elt_path, "r") as f:
@@ -87,6 +87,8 @@ class EMSL_dump:
         return dict_ele
 
     def dwl_basis_list_raw(self):
+        """Return the source code of the iframe who contains the list of the basis set available"""
+
         print "Download all the name available in EMSL. It can take some time.",
         sys.stdout.flush()
 
@@ -111,13 +113,30 @@ class EMSL_dump:
         print "Done"
         return page
 
-    def bl_raw_to_array(self, data_raw):
-        """Parse the raw html to create a basis set array whith all the info:
-        url, name,description"""
+    def basis_list_raw_to_array(self, data_raw):
+        """Parse the raw html basis set to create a dict will all the information for dowloanding the database :
+        Return d[name] = [name, xml_path, description, lits of the elements available]
+        
+         Explanation of tuple data from 'tup' by index:
 
+         0 - path to xml file
+         1 - basis set name
+         2 - categorization: "dftcfit", "dftorb", "dftxfit", "diffuse",
+                "ecporb","effective core potential", "orbital", "polarization",
+                "rydberg", or "tight"
+         3 - parameterized elements by symbol e.g. '[H, He, B, C, N, O, F, Ne]'
+         4 - curation status; only 'published' is trustworthy
+         5 - boolean: has ECP
+         6 - boolean: has spin
+         7 - last modified date
+         8 - name of primary developer
+         9 - name of contributor
+        10 - human-readable summary/description of basis set
+        """
         d = {}
 
         for line in data_raw.split('\n'):
+
             if "new basisSet(" in line:
                 b = line.find("(")
                 e = line.find(");")
@@ -125,6 +144,11 @@ class EMSL_dump:
                 s = line[b + 1:e]
 
                 tup = eval(s)
+
+                # non-published (e.g. rejected) basis sets should be ignored
+				if tup[4] != "published":
+					continue
+
                 xml_path = tup[0]
                 name = tup[1]
 
@@ -135,19 +159,13 @@ class EMSL_dump:
                 if "-ecp" in xml_path.lower():
                     continue
                 d[name] = [name, xml_path, des, elts]
+        
+        return d
 
-        """Tric for the unicity of the name"""
-        array = [d[key] for key in d]
-
-        array_sort = sorted(array, key=lambda x: x[0])
-        print len(array_sort), "basisset will be download"
-
-        return array_sort
-
-    def basis_data_row_to_array(self, data, name, des, elts):
-        """Parse the basis data raw html to get a nice tuple"""
-
-        d = []
+    def parse_basis_data_gamess_us(self, data, name, des, elts):
+        """Parse the basis data raw html of gamess-us to get a nice tuple
+           Return [name, description, [[ele, data_ele],...]]"""
+        basis_data = []
 
         b = data.find("$DATA")
         e = data.find("$END")
@@ -156,9 +174,12 @@ class EMSL_dump:
                 print data
             raise Exception("WARNING not DATA")
         else:
-            data = data.replace("PHOSPHOROUS", "PHOSPHORUS")
-            data = data.replace("D+", "E+")
-            data = data.replace("D-", "E-")
+            dict_replace = {"PHOSPHOROUS": "PHOSPHORUS",
+            				"D+": "E+",
+            				"D-": "E-"}
+
+			for k, v in dict_replace.iteritems():
+    			data = data.replace(k, v)
 
             data = data[b + 5:e - 1].split('\n\n')
 
@@ -175,17 +196,17 @@ class EMSL_dump:
                     raise Exception("WARNING bad split")
 
                 if elt_long_th == elt_long_exp:
-                    d.append([elt, data_elt.strip()])
+                    basis_data.append([elt, data_elt.strip()])
                 else:
                     if self.debug:
                         print "th", elt_long_th
                         print "exp", elt_long_exp
                         print "abv", elt
-                    raise Exception("WARNING not good ELEMENT")
+                    raise Exception("WARNING not a good ELEMENT")
 
-        return [name, des, d]
+        return [name, des, basis_data]
 
-    def create_sql(self, list_basis_array):
+    def create_sql(self, dict_basis_list):
         """Create the sql from the list of basis available data"""
 
         conn = sqlite3.connect(self.db_path)
@@ -244,8 +265,8 @@ class EMSL_dump:
                 while attemps < attemps_max:
                     text = self.requests.get(url, params=params).text
                     try:
-                        basis_data = self.basis_data_row_to_array(
-                            text, name, des, elts)
+                        basis_data = self.parse_basis_data_gamess_us(text,
+                                                                  name, des, elts)
                     except:
                         time.sleep(0.1)
                         attemps += 1
@@ -262,7 +283,7 @@ class EMSL_dump:
                     q_in.task_done()
 
         def enqueue():
-            for [name, path_xml, des, elts] in list_basis_array:
+            for [name, path_xml, des, elts] in dict_basis_list.itervalues():
                 q_in.put([name, path_xml, des, elts])
 
             return 0
@@ -279,24 +300,21 @@ class EMSL_dump:
         nb_basis = len(list_basis_array)
 
         for i in range(nb_basis):
-            name, des, d = q_out.get()
+            name, des, basis_data = q_out.get()
             q_out.task_done()
 
             try:
-                c.execute(
-                    "INSERT INTO basis_tab(name,description) VALUES (?,?)", [
-                        name, des])
+            	cmd = "INSERT INTO basis_tab(name,description) VALUES (?,?)"
+                c.execute(cmd, [name, des])
                 conn.commit()
             except sqlite3.IntegrityError:
                 print '{:>3}'.format(i + 1), "/", nb_basis, name, "fail"
 
-            id_ = c.lastrowid
+            id_ = [c.lastrowid]
             try:
-                c.executemany(
-                    "INSERT INTO data_tab VALUES (?,?,?)", [
-                        [id_] + k for k in d])
+            	cmd = "INSERT INTO data_tab VALUES (?,?,?)"
+                c.executemany(cmd, [id_ + k for k in basis_data])
                 conn.commit()
-
                 print '{:>3}'.format(i + 1), "/", nb_basis, name
 
             except:
@@ -311,7 +329,6 @@ class EMSL_dump:
         """Create new_db from scratch"""
 
         _data = self.dwl_basis_list_raw()
-        array_basis = self.bl_raw_to_array(_data)
-        del _data
+        array_basis = self.basis_list_raw_to_array(_data)
 
         self.create_sql(array_basis)
