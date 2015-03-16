@@ -34,7 +34,7 @@ def checkSQLite3(db_path):
     # Check if the file system allows I/O on sqlite3 (lustre)
     # If not, copy on /dev/shm and remove after opening
     try:
-        EMSL_local(db_path=db_path).get_list_basis_available()
+        EMSL_local(db_path=db_path).list_basis_available()
     except sqlite3.OperationalError:
         print >>sys.stderr, "I/O Error for you file system"
         print >>sys.stderr, "Try some fixe"
@@ -47,7 +47,7 @@ def checkSQLite3(db_path):
 
     # Try again to check
     try:
-        EMSL_local(db_path=db_path).get_list_basis_available()
+        EMSL_local(db_path=db_path).list_basis_available()
     except:
         print >>sys.stderr, "Sorry..."
         os.system("rm -f /dev/shm/%d.db" % (os.getpid()))
@@ -136,10 +136,10 @@ class EMSL_local:
         self.c.execute("SELECT * from format_tab")
         self.format = self.c.fetchone()[0]
 
-    def get_list_basis_available(self,
-                                 elts=[],
-                                 basis=[],
-                                 average_mo_number=False):
+    def list_basis_available(self,
+                             elts=[],
+                             basis=[],
+                             average_mo_number=False):
         """
         return all the basis name who contant all the elts
         """
@@ -224,15 +224,10 @@ class EMSL_local:
         dict_info = OrderedDict()
         # Description : dict_info[name] = [description, nb_mo, nb_ele]
 
-        from src.parser import symmetry_dict
+        from src.parser import get_symemetry_function
         if average_mo_number:
 
-            try:
-                l_symmetry = symmetry_dict[self.format]
-            except KeyError:
-                print >> sys.stderr, "You need to add a function in symmetry_dict"
-                print >> sys.stderr, "for your format ({0})".format(self.format)
-                sys.exit(1)
+            f_symmetry = get_symemetry_function(self.format)
 
             for name, description, atom_basis in info:
 
@@ -240,7 +235,7 @@ class EMSL_local:
 
                 line = atom_basis.split("\n")
 
-                for type_, _, _ in l_symmetry(line):
+                for type_, _, _ in f_symmetry(line):
 
                     nb_mo += string_to_nb_mo(type_)
                 try:
@@ -282,7 +277,7 @@ class EMSL_local:
 
     def get_basis(self,
                   basis_name, elts=None,
-                  handle_f_format="GAMESS-US", check_format=None):
+                  handle_l_format=False, check_format=False):
         """
         Return the data from the basis set
         """
@@ -303,18 +298,18 @@ class EMSL_local:
         # ~#~#~#~#~#~#~#~ #
         # h a n d l e _ f #
         # ~#~#~#~#~#~#~#~ #
-        if handle_f_format:
-            from src.parser import handle_f_dict
+        if handle_l_format:
+            from src.parser import handle_l_dict
             try:
-                f = handle_f_dict[self.format]
+                f = handle_l_dict[self.format]
             except KeyError:
                 str_ = "You cannot handle f function with {0} format"
                 print >> sys.stderr, str_.format(self.format)
                 print >> sys.stderr, "Choose in:"
-                print >> sys.stderr, handle_f_dict.keys()
+                print >> sys.stderr, handle_l_dict.keys()
                 sys.exit(1)
             else:
-                l_atom_basis = f(l_atom_basis, self.get_list_symetry)
+                l_atom_basis = f(l_atom_basis)
 
         # ~#~#~#~#~ #
         # C h e c k #
@@ -331,9 +326,12 @@ class EMSL_local:
                 print >>sys.stderr, str_.format(format(str(d_check.keys())))
                 sys.exit(1)
             else:
+                from src.parser import get_symemetry_function
+                f_symmetry = get_symemetry_function(self.format)
+
                 for atom_basis in l_atom_basis:
                     lines = atom_basis.split("\n")
-                    for type_, _, _ in self.get_list_symetry(lines):
+                    for type_, _, _ in f_symmetry(lines):
                         f(type_)
 
         # ~#~#~#~#~#~ #

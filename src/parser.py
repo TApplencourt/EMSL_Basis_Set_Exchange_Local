@@ -112,7 +112,7 @@ def l_symmetry_gamess_us(atom_basis):
     return l
 
 
-def handle_f_gamess_us(l_atom_basis):
+def handle_l_gamess_us(l_atom_basis):
     """
     Read l_atom_basis and change the SP in L and P
     """
@@ -192,3 +192,22 @@ format_dict = {"Gaussian94": None,
 #        |___/                                   |___/
 
 symmetry_dict = {"GAMESS-US": l_symmetry_gamess_us}
+
+
+def get_symemetry_function(format):
+            try:
+                l_symmetry = symmetry_dict[format]
+            except KeyError:
+                print >> sys.stderr, "You need to add a function in symmetry_dict"
+                print >> sys.stderr, "for your format ({0})".format(format)
+                sys.exit(1)
+            return l_symmetry
+
+#  _   _                 _ _        _ _ _    _ _  ______ _      _
+# | | | |               | | |      ( | ) |  ( | ) |  _  (_)    | |
+# | |_| | __ _ _ __   __| | | ___   V V| |   V V  | | | |_  ___| |_
+# |  _  |/ _` | '_ \ / _` | |/ _ \     | |        | | | | |/ __| __|
+# | | | | (_| | | | | (_| | |  __/     | |____    | |/ /| | (__| |_
+# \_| |_/\__,_|_| |_|\__,_|_|\___|     \_____/    |___/ |_|\___|\__|
+
+handle_l_dict = {"GAMESS-US": handle_l_gamess_us}

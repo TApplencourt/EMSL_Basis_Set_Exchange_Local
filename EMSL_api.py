@@ -77,15 +77,11 @@ if __name__ == '__main__':
     if arguments["list_basis"]:
         e = EMSL_local(db_path=db_path)
 
-        elts = arguments["--atom"]
+        l = e.list_basis_available(arguments["--atom"],
+                                   arguments["--basis"],
+                                   arguments["--average_mo_number"])
 
-        amn = arguments["--average_mo_number"]
-
-        l = e.get_list_basis_available(elts,
-                                       arguments["--basis"],
-                                       average_mo_number=amn)
-
-        if amn:
+        if arguments["--average_mo_number"]:
             for name, des, avg in l:
                 print "- '{}' ({}) || {:<50}".format(name, avg, des)
         else:
@@ -127,6 +123,7 @@ if __name__ == '__main__':
             if arguments["--path"]:
                 path = arguments["--path"]
             else:
+                # The defaut path is bais
                 path = "_".join([basis_name, ".".join(elts)])
                 path = "/tmp/" + path + ".bs"
 
