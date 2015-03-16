@@ -348,7 +348,7 @@ class EMSL_local:
                 print >> sys.stderr, handle_f_dict.keys()
                 sys.exit(1)
             else:
-                l_atom_basis = f(l_atom_basis,self.get_list_symetry)
+                l_atom_basis = f(l_atom_basis, self.get_list_symetry)
 
         # ~#~#~#~#~ #
         # C h e c k #

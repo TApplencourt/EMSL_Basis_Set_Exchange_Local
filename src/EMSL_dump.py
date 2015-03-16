@@ -42,7 +42,8 @@ class EMSL_dump:
         self.db_path = db_path
 
         if format not in format_dict:
-            print >> sys.stderr, "Format {0} doesn't exist. Choose in:".format(format)
+            print >> sys.stderr, "Format {0} doesn't exist. Choose in:".format(
+                format)
             print >> sys.stderr, format_dict.keys()
             sys.exit(1)
         else:
@@ -151,8 +152,6 @@ class EMSL_dump:
                 d[name] = [name, xml_path, des, elts]
 
         return d
-
-
 
     #  _____                _
     # /  __ \              | |
