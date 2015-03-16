@@ -24,7 +24,8 @@ def install_with_pip(name):
             import pip
             pip.main(['install', name])
         except:
-            print "You need pip, (http://pip.readthedocs.org/en/latest/installing.html)"
+            print "You need pip"
+            print "(http://pip.readthedocs.org/en/latest/installing.html)"
             sys.exit(1)
 
 
@@ -87,12 +88,12 @@ class EMSL_dump:
         return dict_ele
 
     def dwl_basis_list_raw(self):
-        """Return the source code of the iframe who contains the list of the basis set available"""
+        """Return the source code of the iframe
+           who contains the list of the basis set available"""
 
-        print "Download all the name available in EMSL. It can take some time.",
+        print "Download all the name available in EMSL."
+        print "It can take some time.",
         sys.stdout.flush()
-
-        """Download the source code of the iframe who contains the list of the basis set available"""
 
         url = "https://bse.pnl.gov/bse/portal/user/anon/js_peid/11535052407933/panel/Main/template/content"
         if self.debug:
@@ -114,9 +115,11 @@ class EMSL_dump:
         return page
 
     def basis_list_raw_to_array(self, data_raw):
-        """Parse the raw html basis set to create a dict will all the information for dowloanding the database :
-        Return d[name] = [name, xml_path, description, lits of the elements available]
-        
+        """Parse the raw html basis set to create a dict
+           will all the information for dowloanding the database :
+        Return d[name] = [name, xml_path, description,
+                          lits of the elements available]
+
          Explanation of tuple data from 'tup' by index:
 
          0 - path to xml file
@@ -146,8 +149,8 @@ class EMSL_dump:
                 tup = eval(s)
 
                 # non-published (e.g. rejected) basis sets should be ignored
-				if tup[4] != "published":
-					continue
+                if tup[4] != "published":
+                    continue
 
                 xml_path = tup[0]
                 name = tup[1]
@@ -159,7 +162,7 @@ class EMSL_dump:
                 if "-ecp" in xml_path.lower():
                     continue
                 d[name] = [name, xml_path, des, elts]
-        
+
         return d
 
     def parse_basis_data_gamess_us(self, data, name, des, elts):
@@ -175,11 +178,11 @@ class EMSL_dump:
             raise Exception("WARNING not DATA")
         else:
             dict_replace = {"PHOSPHOROUS": "PHOSPHORUS",
-            				"D+": "E+",
-            				"D-": "E-"}
+                            "D+": "E+",
+                            "D-": "E-"}
 
-			for k, v in dict_replace.iteritems():
-    			data = data.replace(k, v)
+        for k, v in dict_replace.iteritems():
+            data = data.replace(k, v)
 
             data = data[b + 5:e - 1].split('\n\n')
 
@@ -249,7 +252,8 @@ class EMSL_dump:
         q_out = Queue.Queue(num_worker_threads)
 
         def worker():
-            """get a Job from the q_in, do stuff, when finish put it in the q_out"""
+            """get a Job from the q_in, do stuff,
+               when finish put it in the q_out"""
             while True:
                 name, path_xml, des, elts = q_in.get()
 
@@ -265,8 +269,11 @@ class EMSL_dump:
                 while attemps < attemps_max:
                     text = self.requests.get(url, params=params).text
                     try:
-                        basis_data = self.parse_basis_data_gamess_us(text,
-                                                                  name, des, elts)
+                        basis_data = self.parse_basis_data_gamess_us(
+                            text,
+                            name,
+                            des,
+                            elts)
                     except:
                         time.sleep(0.1)
                         attemps += 1
@@ -297,14 +304,14 @@ class EMSL_dump:
             t.daemon = True
             t.start()
 
-        nb_basis = len(list_basis_array)
+        nb_basis = len(dict_basis_list)
 
         for i in range(nb_basis):
             name, des, basis_data = q_out.get()
             q_out.task_done()
 
             try:
-            	cmd = "INSERT INTO basis_tab(name,description) VALUES (?,?)"
+                cmd = "INSERT INTO basis_tab(name,description) VALUES (?,?)"
                 c.execute(cmd, [name, des])
                 conn.commit()
             except sqlite3.IntegrityError:
@@ -312,7 +319,7 @@ class EMSL_dump:
 
             id_ = [c.lastrowid]
             try:
-            	cmd = "INSERT INTO data_tab VALUES (?,?,?)"
+                cmd = "INSERT INTO data_tab VALUES (?,?,?)"
                 c.executemany(cmd, [id_ + k for k in basis_data])
                 conn.commit()
                 print '{:>3}'.format(i + 1), "/", nb_basis, name
