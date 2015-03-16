@@ -4,6 +4,9 @@ import re
 import time
 import sqlite3
 
+from collections import OrderedDict
+from src.parser import format_dict
+
 
 def install_with_pip(name):
 
@@ -35,26 +38,24 @@ class EMSL_dump:
     This call implement all you need for download the EMSL and save it localy
     """
 
-    format_dict = {"g94": "Gaussian94",
-                   "gamess-us": "GAMESS-US",
-                   "gamess-uk": "GAMESS-UK",
-                   "turbomole": "Turbomole",
-                   "tx93": "TX93",
-                   "molpro": "Molpro",
-                   "molproint": "MolproInt",
-                   "hondo": "Hondo",
-                   "supermolecule": "SuperMolecule",
-                   "molcas": "Molcas",
-                   "hyperchem": "HyperChem",
-                   "dalton": "Dalton",
-                   "demon-ks": "deMon-KS",
-                   "demon2k": "deMon2k",
-                   "aces2": "AcesII"
-                   }
-
     def __init__(self, db_path=None, format="GAMESS-US", contraction="True"):
         self.db_path = db_path
-        self.format = format
+
+        if format not in format_dict:
+            print >> sys.stderr, "Format {0} doesn't exist. Choose in:".format(format)
+            print >> sys.stderr, format_dict.keys()
+            sys.exit(1)
+        else:
+            self.format = format
+
+            if format_dict[self.format]:
+                self.parser = format_dict[self.format]
+            else:
+                print >> sys.stderr, "We have no parser for this format"
+                print >> sys.stderr, "Fill free to Fock /pull request"
+                print >> sys.stderr, "You just need to add a function like"
+                print >> sys.stderr, "'parse_basis_data_gamess_us' to parse you'r format"
+
         self.contraction = str(contraction)
         self.debug = True
 
@@ -68,24 +69,11 @@ class EMSL_dump:
 
     def get_list_format(self):
         """List all the format available in EMSL"""
-        return self.format_dict
+        return format_dict
 
     def set_db_path(self, path):
         """Define the database path"""
         self.db_path = path
-
-    def get_dict_ele(self):
-        """Return dict[atom]=[abreviation]"""
-        elt_path = os.path.dirname(sys.argv[0]) + "/src/elts_abrev.dat"
-
-        with open(elt_path, "r") as f:
-            data = f.readlines()
-
-        dict_ele = dict()
-        for i in data:
-            l = i.split("-")
-            dict_ele[l[1].strip().lower()] = l[2].strip().lower()
-        return dict_ele
 
     def dwl_basis_list_raw(self):
         """Return the source code of the iframe
@@ -136,7 +124,8 @@ class EMSL_dump:
          9 - name of contributor
         10 - human-readable summary/description of basis set
         """
-        d = {}
+
+        d = OrderedDict()
 
         for line in data_raw.split('\n'):
 
@@ -148,69 +137,40 @@ class EMSL_dump:
 
                 tup = eval(s)
 
-                # non-published (e.g. rejected) basis sets should be ignored
-                if tup[4] != "published":
+                xml_path = tup[0]
+
+                # non-published (e.g. rejected) basis sets and ecp should be
+                # ignored
+                if tup[4] != "published" or "-ecp" in xml_path.lower():
                     continue
 
-                xml_path = tup[0]
                 name = tup[1]
-
                 elts = re.sub('[["\ \]]', '', tup[3]).split(',')
-
                 des = re.sub('\s+', ' ', tup[-1])
 
-                if "-ecp" in xml_path.lower():
-                    continue
                 d[name] = [name, xml_path, des, elts]
 
         return d
 
-    def parse_basis_data_gamess_us(self, data, name, des, elts):
-        """Parse the basis data raw html of gamess-us to get a nice tuple
-           Return [name, description, [[ele, data_ele],...]]"""
-        basis_data = []
 
-        b = data.find("$DATA")
-        e = data.find("$END")
-        if (b == -1 or data.find("$DATA$END") != -1):
-            if self.debug:
-                print data
-            raise Exception("WARNING not DATA")
-        else:
-            dict_replace = {"PHOSPHOROUS": "PHOSPHORUS",
-                            "D+": "E+",
-                            "D-": "E-"}
 
-        for k, v in dict_replace.iteritems():
-            data = data.replace(k, v)
-
-            data = data[b + 5:e - 1].split('\n\n')
-
-            dict_ele = self.get_dict_ele()
-
-            for (elt, data_elt) in zip(elts, data):
-
-                elt_long_th = dict_ele[elt.lower()]
-                elt_long_exp = data_elt.split()[0].lower()
-
-                if "$" in data_elt:
-                    if self.debug:
-                        print "Eror",
-                    raise Exception("WARNING bad split")
-
-                if elt_long_th == elt_long_exp:
-                    basis_data.append([elt, data_elt.strip()])
-                else:
-                    if self.debug:
-                        print "th", elt_long_th
-                        print "exp", elt_long_exp
-                        print "abv", elt
-                    raise Exception("WARNING not a good ELEMENT")
-
-        return [name, des, basis_data]
-
+    #  _____                _
+    # /  __ \              | |
+    # | /  \/_ __ ___  __ _| |_ ___
+    # | |   | '__/ _ \/ _` | __/ _ \
+    # | \__/\ | |  __/ (_| | ||  __/
+    #  \____/_|  \___|\__,_|\__\___|
+    #
     def create_sql(self, dict_basis_list):
-        """Create the sql from the list of basis available data"""
+        """Create the sql from strach.
+            Take the list of basis available data,
+            download her, put her in sql"""
+
+        if os.path.isfile(self.db_path):
+            print >> sys.stderr, "FAILLURE:"
+            print >> sys.stderr, "{0} file alredy exist.".format(self.db_path),
+            print >> sys.stderr, "Delete or remove it"
+            sys.exit(1)
 
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
@@ -240,8 +200,6 @@ class EMSL_dump:
                 NATURAL JOIN   data_tab
                     ''')
 
-        conn.commit()
-
         import Queue
         import threading
 
@@ -269,12 +227,11 @@ class EMSL_dump:
                 while attemps < attemps_max:
                     text = self.requests.get(url, params=params).text
                     try:
-                        basis_data = self.parse_basis_data_gamess_us(
-                            text,
-                            name,
-                            des,
-                            elts)
+                        basis_data = self.parser(text, name, des, elts,
+                                                 self.debug)
                     except:
+                        if self.debug:
+                            raise
                         time.sleep(0.1)
                         attemps += 1
                     else:
@@ -310,24 +267,33 @@ class EMSL_dump:
             name, des, basis_data = q_out.get()
             q_out.task_done()
 
+            str_indice = '{:>3}'.format(i + 1)
+            str_ = '{0} / {1} | {2}'.format(str_indice, nb_basis, name)
+
+            # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
+            # A d d _ t h e _ b a s i s _ n a m e #
+            # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
             try:
                 cmd = "INSERT INTO basis_tab(name,description) VALUES (?,?)"
                 c.execute(cmd, [name, des])
                 conn.commit()
             except sqlite3.IntegrityError:
-                print '{:>3}'.format(i + 1), "/", nb_basis, name, "fail"
+                print str_, "Fail"
+
+            # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
+            # A d d _ t h e _ b a s i s _ d a t a #
+            # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
 
             id_ = [c.lastrowid]
+
             try:
-                cmd = "INSERT INTO data_tab VALUES (?,?,?)"
+                cmd = "INSERT INTO data_tab(basis_id,elt,data) VALUES (?,?,?)"
                 c.executemany(cmd, [id_ + k for k in basis_data])
                 conn.commit()
-                print '{:>3}'.format(i + 1), "/", nb_basis, name
-
-            except:
-                print '{:>3}'.format(i + 1), "/", nb_basis, name, "fail"
-                raise
-
+            except sqlite3.IntegrityError:
+                print str_, "Fail"
+            else:
+                print str_
         conn.close()
 
         q_in.join()

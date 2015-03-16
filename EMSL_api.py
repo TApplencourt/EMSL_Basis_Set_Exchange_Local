@@ -155,14 +155,10 @@ if __name__ == '__main__':
         db_path = arguments["--db_path"]
         format = arguments["--format"]
 
-        format_dict = EMSL_dump().get_list_format()
-        if format not in format_dict:
-            print "Format %s doesn't exist. Run list_formats to get the list of formats." % (format)
-            sys.exit(1)
         contraction = not arguments["--no-contraction"]
 
         e = EMSL_dump(db_path=db_path,
-                      format=format_dict[format],
+                      format=format,
                       contraction=contraction)
         e.new_db()
 
