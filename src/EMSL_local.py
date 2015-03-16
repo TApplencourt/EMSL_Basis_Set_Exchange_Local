@@ -152,6 +152,10 @@ class EMSL_local:
                     pass
 
         l[-1].append(i + 1)
+
+        print l
+        sys.exit()
+
         return l
 
     def get_list_basis_available(self,
