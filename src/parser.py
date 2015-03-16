@@ -1,4 +1,5 @@
 import sys
+import os
 
 
 def get_dict_ele():
@@ -72,7 +73,98 @@ def parse_basis_data_gamess_us(data, name, des, elts, debug=False):
 
     return [name, des, basis_data]
 
-import os
+
+import re
+
+symmetry_regex = re.compile(ur'^(\w)\s+\d+\b')
+
+
+def l_symmetry_gamess_us(atom_basis):
+    """
+    Return the begin and the end of all the type of orbital
+    input: atom_basis = [name, S 1, 12 0.12 12212, ...]
+    output: [ [type, begin, end], ...]
+    """
+    # Example
+    # [[u'S', 1, 5], [u'L', 5, 9], [u'L', 9, 12], [u'D', 16, 18]]"
+
+    l = []
+    for i, line in enumerate(atom_basis):
+        m = re.search(symmetry_regex, line)
+        if m:
+            # Cause of L !
+            read_symmetry = m.group(1)
+
+            # L is real L or special SP
+            # Just check the number of exponant
+            if read_symmetry == "L" and len(atom_basis[i + 1].split()) == 4:
+                real_symmetry = "SP"
+            else:
+                real_symmetry = read_symmetry
+
+            l.append([real_symmetry, i])
+            try:
+                l[-2].append(i)
+            except IndexError:
+                pass
+
+    l[-1].append(i + 1)
+    return l
+
+
+def handle_f_gamess_us(l_atom_basis):
+    """
+    Read l_atom_basis and change the SP in L and P
+    """
+
+    l_data = []
+    for atom_basis in l_atom_basis:
+
+        # Split the data in line
+        l_line_raw = atom_basis.split("\n")
+        l_line = [l_line_raw[0]]
+        # l_line_raw[0] containt the name of the Atom
+
+        for symmetry, begin, end in l_symmetry_gamess_us(l_line_raw):
+
+            if symmetry == "SP":
+
+                body_s = []
+                body_p = []
+
+                for i_l in l_line_raw[begin + 1:end]:
+
+                    # one L =>  S & P
+                    a = i_l.split()
+
+                    common = "{:>3}".format(a[0])
+                    common += "{:>15.7f}".format(float(a[1]))
+
+                    tail_s = common + "{:>23.7f}".format(float(a[2]))
+                    body_s.append(tail_s)
+
+                    tail_p = common + "{:>23.7f}".format(float(a[3]))
+                    body_p.append(tail_p)
+
+                l_line += [l_line_raw[begin].replace("L", "S")]
+                l_line += body_s
+
+                l_line += [l_line_raw[begin].replace("L", "P")]
+                l_line += body_p
+            else:
+                l_line += l_line_raw[begin:end]
+
+        l_data.append("\n".join(l_line))
+
+    return l_data
+
+# ______                         _         _ _      _
+# |  ___|                       | |       | (_)    | |
+# | |_ _ __ ___  _ __ ___   __ _| |_    __| |_  ___| |_
+# |  _| '__/ _ \| '_ ` _ \ / _` | __|  / _` | |/ __| __|
+# | | | | | (_) | | | | | | (_| | |_  | (_| | | (__| |_
+# \_| |_|  \___/|_| |_| |_|\__,_|\__|  \__,_|_|\___|\__|
+#
 
 format_dict = {"Gaussian94": None,
                "GAMESS-US": parse_basis_data_gamess_us,
@@ -90,71 +182,13 @@ format_dict = {"Gaussian94": None,
                "deMon2k": None,
                "AcesII": None}
 
-#  _   _                 _ _        _ _ _    _ _
-# | | | |               | | |      ( | ) |  ( | )
-# | |_| | __ _ _ __   __| | | ___   V V| |   V V
-# |  _  |/ _` | '_ \ / _` | |/ _ \     | |
-# | | | | (_| | | | | (_| | |  __/     | |____
-# \_| |_/\__,_|_| |_|\__,_|_|\___|     \_____/
-#
-#
+#  _____                                _                    _ _      _
+# /  ___|                              | |                  | (_)    | |
+# \ `--. _   _ _ __ ___  _ __ ___   ___| |_ _ __ _   _    __| |_  ___| |_
+#  `--. \ | | | '_ ` _ \| '_ ` _ \ / _ \ __| '__| | | |  / _` | |/ __| __|
+# /\__/ / |_| | | | | | | | | | | |  __/ |_| |  | |_| | | (_| | | (__| |_
+# \____/ \__, |_| |_| |_|_| |_| |_|\___|\__|_|   \__, |  \__,_|_|\___|\__|
+#         __/ |                                   __/ |
+#        |___/                                   |___/
 
-
-def handle_f_gamess_us(l_atom_basis, list_symetry):
-    """
-    Read l_atom_basis, if "L" orbital before "D" one, split them into S and P
-    """
-
-    l_data = []
-    for atom_basis in l_atom_basis:
-
-        # Split the data in line
-        l_line_raw = atom_basis.split("\n")
-        l_line = [l_line_raw[0]]
-        # l_line_raw[0] containt the name of the Atom
-
-        maybe_good_l = True
-
-        for symmetry, begin, end in list_symetry(l_line_raw):
-
-            if maybe_good_l and symmetry in "L":
-
-                body_s = []
-                body_p = []
-
-                for i_l in l_line_raw[begin + 1:end]:
-
-                    # one L =>  S & P
-                    a = i_l.split()
-
-                    common = "{:>3}".format(a[0])
-                    common += "{:>15.7f}".format(float(a[1]))
-
-                    tail_s = common + "{:>23.7f}".format(float(a[2]))
-                    body_s.append(tail_s)
-
-                    # Maybe only One coefficient for L function
-                    # I guess it mean S and L are equal
-                    try:
-                        tail_p = common + "{:>23.7f}".format(float(a[3]))
-                    except IndexError:
-                        tail_p = tail_s
-                    finally:
-                        body_p.append(tail_p)
-
-                l_line += [l_line_raw[begin].replace("L", "S")]
-                l_line += body_s
-
-                l_line += [l_line_raw[begin].replace("L", "P")]
-                l_line += body_p
-            else:
-                l_line += l_line_raw[begin:end]
-
-            if symmetry not in ["S", "P", "L"]:
-                maybe_good_l = False
-
-        l_data.append("\n".join(l_line))
-
-    return l_data
-
-handle_f_dict = {"GAMESS-US": handle_f_gamess_us}
+symmetry_dict = {"GAMESS-US": l_symmetry_gamess_us}

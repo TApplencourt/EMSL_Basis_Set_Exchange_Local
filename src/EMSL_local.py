@@ -70,14 +70,14 @@ def cond_sql_or(table_name, l_value, glob=False):
 
 def string_to_nb_mo(str_type):
     """Take a string and return the nb of orbital"""
-    assert len(str_type) == 1
 
-    d = {"S": 1,
-         "P": 2,
-         "D": 3}
+    d = {"S": 3,
+         "P": 5,
+         "D": 7,
+         "SP": 8}
 
     if str_type in d:
-        return 2 * d[str_type] + 1
+        return d[str_type]
     # ord("F") = 70 and ord("Z") = 87
     elif 70 <= ord(str_type) <= 87:
         # ord("F") = 70 and l = 4 so ofset if 66
@@ -127,36 +127,14 @@ class EMSL_local:
     All the method for using the EMSL db localy
     """
 
-    def __init__(self, db_path=None, format=None):
+    def __init__(self, db_path=None):
         self.db_path = db_path
-        self.p = re.compile(ur'^(\w)\s+\d+\b')
-        self.format = format
 
-    def get_list_symetry(self, atom_basis):
-        """
-        Return the begin and the end of all the type of orbital
-        input: atom_basis = [name, ]
-        output: [ [type, begin, end], ...]
-        """
-        # Example
-        # [[u'S', 1, 5], [u'L', 5, 9], [u'L', 9, 12], [u'D', 16, 18]]"
+        self.conn = sqlite3.connect(self.db_path)
+        self.c = self.conn.cursor()
 
-        l = []
-        for i, line in enumerate(atom_basis):
-            m = re.search(self.p, line)
-            if m:
-                l.append([m.group(1), i])
-                try:
-                    l[-2].append(i)
-                except IndexError:
-                    pass
-
-        l[-1].append(i + 1)
-
-        print l
-        sys.exit()
-
-        return l
+        self.c.execute("SELECT * from format_tab")
+        self.format = self.c.fetchone()[0]
 
     def get_list_basis_available(self,
                                  elts=[],
@@ -173,12 +151,6 @@ class EMSL_local:
         #          Else Get name,description
         #       3) Parse it
 
-        # ~#~#~#~ #
-        # I n i t #
-        # ~#~#~#~ #
-
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
 
         # ~#~#~#~#~#~ #
         # F i l t e r #
@@ -213,9 +185,9 @@ class EMSL_local:
                       WHERE elt=? AND {0}""".format(cmd_filter_basis)
 
             cmd = " INTERSECT ".join([str_] * len(elts)) + ";"
-            c.execute(cmd, elts)
+            self.c.execute(cmd, elts)
 
-            l_basis_id = [i[0] for i in c.fetchall()]
+            l_basis_id = [i[0] for i in self.c.fetchall()]
 
             # ~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
             # C r e a t e _ t h e _ c m d #
@@ -240,10 +212,8 @@ class EMSL_local:
         # F e t c h #
         # ~#~#~#~#~ #
 
-        c.execute(cmd)
-        info = c.fetchall()
-
-        conn.close()
+        self.c.execute(cmd)
+        info = self.c.fetchall()
 
         # ~#~#~#~#~#~#~ #
         # P a r s i n g #
@@ -254,32 +224,25 @@ class EMSL_local:
         dict_info = OrderedDict()
         # Description : dict_info[name] = [description, nb_mo, nb_ele]
 
+        from src.parser import symmetry_dict
         if average_mo_number:
 
-            from src.parser import handle_f_dict
-
             try:
-                f = handle_f_dict[self.format]
+                l_symmetry = symmetry_dict[self.format]
             except KeyError:
-                str_ = " WARNING Cannot handle counting L function in this format"
-                print >> sys.stderr, str_
+                print >> sys.stderr, "You need to add a function in symmetry_dict"
+                print >> sys.stderr, "for your format ({0})".format(self.format)
+                sys.exit(1)
 
             for name, description, atom_basis in info:
-
-                try:
-                    atom_basis = f([atom_basis], self.get_list_symetry)
-                    atom_basis = "\n\n".join(atom_basis)
-                except UnboundLocalError:
-                    pass
 
                 nb_mo = 0
 
                 line = atom_basis.split("\n")
 
-                for type_, _, _ in self.get_list_symetry(line):
+                for type_, _, _ in l_symmetry(line):
 
                     nb_mo += string_to_nb_mo(type_)
-
                 try:
                     dict_info[name][1] += nb_mo
                     dict_info[name][2] += 1.
@@ -297,13 +260,6 @@ class EMSL_local:
 
     def get_list_element_available(self, basis_name):
 
-        # ~#~#~#~ #
-        # I n i t #
-        # ~#~#~#~ #
-
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-
         # ~#~#~#~#~#~ #
         # F i l t e r #
         # ~#~#~#~#~#~ #
@@ -316,14 +272,13 @@ class EMSL_local:
         # F e t c h #
         # ~#~#~#~#~ #
 
-        c.execute(str_, {"name_us": basis_name})
-        conn.close()
+        self.c.execute(str_, {"name_us": basis_name})
 
         # ~#~#~#~#~#~ #
         # R e t u r n #
         # ~#~#~#~#~#~ #
 
-        return [str(i[0]) for i in c.fetchall()]
+        return [str(i[0]) for i in self.c.fetchall()]
 
     def get_basis(self,
                   basis_name, elts=None,
@@ -332,26 +287,18 @@ class EMSL_local:
         Return the data from the basis set
         """
 
-        # ~#~#~#~ #
-        # I n i t #
-        # ~#~#~#~ #
-
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-
         # ~#~#~#~#~#~ #
         # F i l t e r #
         # ~#~#~#~#~#~ #
 
         cmd_filter_ele = " ".join(cond_sql_or("elt", elts)) if elts else "(1)"
 
-        c.execute('''SELECT DISTINCT data from output_tab
+        self.c.execute('''SELECT DISTINCT data from output_tab
                      WHERE name="{0}"
                      AND  {1}'''.format(basis_name, cmd_filter_ele))
 
         # We need to take i[0] because fetchall return a tuple [(value),...]
-        l_atom_basis = [i[0].strip() for i in c.fetchall()]
-        conn.close()
+        l_atom_basis = [i[0].strip() for i in self.c.fetchall()]
 
         # ~#~#~#~#~#~#~#~ #
         # h a n d l e _ f #

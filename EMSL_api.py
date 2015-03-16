@@ -5,14 +5,12 @@
 
 Usage:
   EMSL_api.py list_basis  [--basis=<basis_name>...]
-                          --format=<format>
                           [--atom=<atom_name>...]
                           [--db_path=<db_path>]
                           [--average_mo_number]
   EMSL_api.py list_atoms  --basis=<basis_name>
                           [--db_path=<db_path>]
   EMSL_api.py get_basis_data --basis=<basis_name>
-                             --format=<format>
                              [--atom=<atom_name>...]
                              [--db_path=<db_path>]
                              [(--save [--path=<path>])]
@@ -77,7 +75,7 @@ if __name__ == '__main__':
     # \_____/_|___/\__| \____/ \__,_|___/_|___/
 
     if arguments["list_basis"]:
-        e = EMSL_local(db_path=db_path, format=arguments["--format"])
+        e = EMSL_local(db_path=db_path)
 
         elts = arguments["--atom"]
 
@@ -100,7 +98,7 @@ if __name__ == '__main__':
     # | |   | / __| __| |  __|| |/ _ \ '_ ` _ \ / _ \ '_ \| __/ __|
     # | |___| \__ \ |_  | |___| |  __/ | | | | |  __/ | | | |_\__ \
     # \_____/_|___/\__| \____/|_|\___|_| |_| |_|\___|_| |_|\__|___/
-    if arguments["list_atoms"]:
+    elif arguments["list_atoms"]:
         e = EMSL_local(db_path=db_path)
 
         basis_name = arguments["--basis"]
@@ -113,8 +111,8 @@ if __name__ == '__main__':
     # | ___ \/ _` / __| / __|  / _` |/ _` | __/ _` |
     # | |_/ / (_| \__ \ \__ \ | (_| | (_| | || (_| |
     # \____/ \__,_|___/_|___/  \__,_|\__,_|\__\__,_|
-    if arguments["get_basis_data"]:
-        e = EMSL_local(db_path=db_path, format=arguments["--format"])
+    elif arguments["get_basis_data"]:
+        e = EMSL_local(db_path=db_path)
         basis_name = arguments["--basis"][0]
         elts = arguments["--atom"]
 
@@ -144,7 +142,7 @@ if __name__ == '__main__':
     # | |   | / __| __| |  _/ _ \| '__| '_ ` _ \ / _` | __/ __|
     # | |___| \__ \ |_  | || (_) | |  | | | | | | (_| | |_\__ \
     # \_____/_|___/\__| |_| \___/|_|  |_| |_| |_|\__,_|\__|___/
-    if arguments["list_formats"]:
+    elif arguments["list_formats"]:
         e = EMSL_dump()
         for i in e.get_list_format():
             print i
@@ -155,7 +153,7 @@ if __name__ == '__main__':
     # | |   | '__/ _ \/ _` | __/ _ \  / _` | '_ \
     # | \__/\ | |  __/ (_| | ||  __/ | (_| | |_) |
     #  \____/_|  \___|\__,_|\__\___|  \__,_|_.__/
-    if arguments["create_db"]:
+    elif arguments["create_db"]:
         db_path = arguments["--db_path"]
         format = arguments["--format"]
 

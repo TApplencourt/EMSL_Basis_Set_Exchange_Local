@@ -189,6 +189,10 @@ class EMSL_dump:
                     REFERENCES basis_tab(basis_id)
                     );''')
 
+        c.execute('''CREATE TABLE format_tab(format TEXT)''')
+        c.execute('''INSERT INTO format_tab VALUES (?)''', [self.format])
+        conn.commit()
+
         c.execute(''' CREATE VIEW output_tab AS
                         SELECT basis_id,
                                name,
@@ -229,8 +233,6 @@ class EMSL_dump:
                         basis_data = self.parser(text, name, des, elts,
                                                  self.debug)
                     except:
-                        if self.debug:
-                            raise
                         time.sleep(0.1)
                         attemps += 1
                     else:
