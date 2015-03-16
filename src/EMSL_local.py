@@ -98,7 +98,7 @@ def check_gamess(str_type):
 
     if str_type in "S P D".split():
         return True
-    elif str_type > "L":
+    elif str_type == "L":
         raise BaseException
     else:
         return True
@@ -127,11 +127,12 @@ class EMSL_local:
     All the method for using the EMSL db localy
     """
 
-    def __init__(self, db_path=None):
+    def __init__(self, db_path=None, format=None):
         self.db_path = db_path
         self.p = re.compile(ur'^(\w)\s+\d+\b')
+        self.format = format
 
-    def get_list_type(self, atom_basis):
+    def get_list_symetry(self, atom_basis):
         """
         Return the begin and the end of all the type of orbital
         input: atom_basis = [name, ]
@@ -223,7 +224,9 @@ class EMSL_local:
             if average_mo_number:
                 column_to_fech += ", data"
 
-            filter_where = " ({}) AND ({})".format(cmd_filter_ele, cmd_filter_basis)
+            filter_where = " ({}) AND ({})".format(
+                cmd_filter_ele,
+                cmd_filter_basis)
 
             cmd = """SELECT DISTINCT {0}
                      FROM output_tab
@@ -248,10 +251,14 @@ class EMSL_local:
         # Description : dict_info[name] = [description, nb_mo, nb_ele]
 
         if average_mo_number:
+
+            print "WARNING DO NOT SUPPORT L COUNTING"
+            print "TREAD L FUNCTION NOT LIKE A SPECIAL ONE"
             for name, description, atom_basis in info:
                 nb_mo = 0
 
-                for type_, _, _ in self.get_list_type(atom_basis.split("\n")):
+                line = atom_basis.split("\n")
+                for type_, _, _ in self.get_list_symetry(line):
                     nb_mo += string_to_nb_mo(type_)
 
                 try:
@@ -299,7 +306,9 @@ class EMSL_local:
 
         return [str(i[0]) for i in c.fetchall()]
 
-    def get_basis(self, basis_name, elts=None, check_format=None):
+    def get_basis(self,
+                  basis_name, elts=None,
+                  handle_f_format="GAMESS-US", check_format=None):
         """
         Return the data from the basis set
         """
@@ -325,31 +334,46 @@ class EMSL_local:
         l_atom_basis = [i[0].strip() for i in c.fetchall()]
         conn.close()
 
+        # ~#~#~#~#~#~#~#~ #
+        # h a n d l e _ f #
+        # ~#~#~#~#~#~#~#~ #
+        if handle_f_format:
+            from src.parser import handle_f_dict
+            try:
+                f = handle_f_dict[self.format]
+            except KeyError:
+                str_ = "You cannot handle f function with {0} format"
+                print >> sys.stderr, str_.format(self.format)
+                print >> sys.stderr, "Choose in:"
+                print >> sys.stderr, handle_f_dict.keys()
+                sys.exit(1)
+            else:
+                l_atom_basis = f(l_atom_basis,self.get_list_symetry)
+
         # ~#~#~#~#~ #
         # C h e c k #
         # ~#~#~#~#~ #
 
-        d_check = {"gamess": check_gamess,
+        d_check = {"GAMESS-US": check_gamess,
                    "NWChem": check_NWChem}
 
         if check_format:
             try:
-                f = d_check[check_format]
+                f = d_check[self.format]
             except KeyError:
                 str_ = """This format is not handle. Chose one of : {}"""
                 print >>sys.stderr, str_.format(format(str(d_check.keys())))
                 sys.exit(1)
-
-            for atom_basis in l_atom_basis:
-                for type_, _, _ in self.get_list_type(atom_basis.split("\n")):
-                    f(type_)
+            else:
+                for atom_basis in l_atom_basis:
+                    lines = atom_basis.split("\n")
+                    for type_, _, _ in self.get_list_symetry(lines):
+                        f(type_)
 
         # ~#~#~#~#~#~ #
         # R e t u r n #
         # ~#~#~#~#~#~ #
-
         return l_atom_basis
-
 if __name__ == "__main__":
 
     e = EMSL_local(db_path="EMSL.db")

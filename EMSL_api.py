@@ -11,10 +11,12 @@ Usage:
   EMSL_api.py list_atoms  --basis=<basis_name>
                           [--db_path=<db_path>]
   EMSL_api.py get_basis_data --basis=<basis_name>
+                             --format=<format>
                              [--atom=<atom_name>...]
                              [--db_path=<db_path>]
                              [(--save [--path=<path>])]
-                             [--check=<format>]
+                             [--check]
+                             [--treat_l]
   EMSL_api.py list_formats
   EMSL_api.py create_db      --db_path=<db_path>
                              --format=<format>
@@ -39,7 +41,6 @@ Example of use:
 
 version = "0.3.0"
 
-import sys
 import os
 
 from src.docopt import docopt
@@ -112,11 +113,13 @@ if __name__ == '__main__':
     # | |_/ / (_| \__ \ \__ \ | (_| | (_| | || (_| |
     # \____/ \__,_|___/_|___/  \__,_|\__,_|\__\__,_|
     if arguments["get_basis_data"]:
-        e = EMSL_local(db_path=db_path)
+        e = EMSL_local(db_path=db_path, format=arguments["--format"])
         basis_name = arguments["--basis"][0]
         elts = arguments["--atom"]
 
-        l_atom_basis = e.get_basis(basis_name, elts, arguments["--check"])
+        l_atom_basis = e.get_basis(basis_name, elts,
+                                   arguments["--treat_l"],
+                                   arguments["--check"])
         # Add separation between atoms, and a empty last line
         str_ = "\n\n".join(l_atom_basis) + "\n"
 
