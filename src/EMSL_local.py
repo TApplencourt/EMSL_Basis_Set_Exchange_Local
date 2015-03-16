@@ -252,19 +252,34 @@ class EMSL_local:
 
         if average_mo_number:
 
-            print "WARNING DO NOT SUPPORT L COUNTING"
-            print "TREAD L FUNCTION NOT LIKE A SPECIAL ONE"
+            from src.parser import handle_f_dict
+
+            try:
+                f = handle_f_dict[self.format]
+            except KeyError:
+                str_ = " WARNING Cannot handle counting L function in this format"
+                print >> sys.stderr, str_
+
             for name, description, atom_basis in info:
+
+                try:
+                    atom_basis = f([atom_basis], self.get_list_symetry)
+                    atom_basis = "\n\n".join(atom_basis)
+                except UnboundLocalError:
+                    pass
+
                 nb_mo = 0
 
                 line = atom_basis.split("\n")
+
                 for type_, _, _ in self.get_list_symetry(line):
+
                     nb_mo += string_to_nb_mo(type_)
 
                 try:
                     dict_info[name][1] += nb_mo
                     dict_info[name][2] += 1.
-                except:
+                except KeyError:
                     dict_info[name] = [description, nb_mo, 1.]
 
         # ~#~#~#~#~#~ #

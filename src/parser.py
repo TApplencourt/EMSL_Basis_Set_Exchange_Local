@@ -106,7 +106,6 @@ def handle_f_gamess_us(l_atom_basis, list_symetry):
     """
 
     l_data = []
-
     for atom_basis in l_atom_basis:
 
         # Split the data in line

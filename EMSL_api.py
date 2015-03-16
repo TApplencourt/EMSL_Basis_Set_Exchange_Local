@@ -5,6 +5,7 @@
 
 Usage:
   EMSL_api.py list_basis  [--basis=<basis_name>...]
+                          --format=<format>
                           [--atom=<atom_name>...]
                           [--db_path=<db_path>]
                           [--average_mo_number]
@@ -76,7 +77,7 @@ if __name__ == '__main__':
     # \_____/_|___/\__| \____/ \__,_|___/_|___/
 
     if arguments["list_basis"]:
-        e = EMSL_local(db_path=db_path)
+        e = EMSL_local(db_path=db_path, format=arguments["--format"])
 
         elts = arguments["--atom"]
 
