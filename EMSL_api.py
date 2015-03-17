@@ -14,7 +14,7 @@ Usage:
                              [--atom=<atom_name>...]
                              [--db_path=<db_path>]
                              [(--save [--path=<path>])]
-                             [--check]
+                             [--check=<program_name>]
                              [--treat_l]
   EMSL_api.py list_formats
   EMSL_api.py create_db      --db_path=<db_path>

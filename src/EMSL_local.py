@@ -85,38 +85,6 @@ def string_to_nb_mo(str_type):
     else:
         raise BaseException
 
-
-#  _
-# /  |_   _   _ |        _. | o  _| o _|_
-# \_ | | (/_ (_ |<   \/ (_| | | (_| |  |_ \/
-#                                         /
-
-def check_gamess(str_type):
-    """Check is the orbital type is handle by gamess"""
-
-    assert len(str_type) == 1
-
-    if str_type in "S P D".split():
-        return True
-    elif str_type == "L":
-        raise BaseException
-    else:
-        return True
-
-
-def check_NWChem(str_type):
-    """Check is the orbital type is handle by gamess"""
-
-    assert len(str_type) == 1
-
-    if str_type in "S P D".split():
-        return True
-    elif str_type > "I" or str_type in "K L M".split():
-        raise BaseException
-    else:
-        return True
-
-
 #  _       __
 # |_ |\/| (_  |    |   _   _  _. |
 # |_ |  | __) |_   |_ (_) (_ (_| |
@@ -224,10 +192,10 @@ class EMSL_local:
         dict_info = OrderedDict()
         # Description : dict_info[name] = [description, nb_mo, nb_ele]
 
-        from src.parser import get_symemetry_function
+        from src.parser import get_symmetry_function
         if average_mo_number:
 
-            f_symmetry = get_symemetry_function(self.format)
+            f_symmetry = get_symmetry_function(self.format)
 
             for name, description, atom_basis in info:
 
@@ -277,7 +245,7 @@ class EMSL_local:
 
     def get_basis(self,
                   basis_name, elts=None,
-                  handle_l_format=False, check_format=False):
+                  handle_l_format=False, check_format=None):
         """
         Return the data from the basis set
         """
@@ -299,40 +267,32 @@ class EMSL_local:
         # h a n d l e _ f #
         # ~#~#~#~#~#~#~#~ #
         if handle_l_format:
-            from src.parser import handle_l_dict
-            try:
-                f = handle_l_dict[self.format]
-            except KeyError:
-                str_ = "You cannot handle f function with {0} format"
-                print >> sys.stderr, str_.format(self.format)
-                print >> sys.stderr, "Choose in:"
-                print >> sys.stderr, handle_l_dict.keys()
-                sys.exit(1)
-            else:
-                l_atom_basis = f(l_atom_basis)
-
+            from src.parser import get_handle_l_function
+            f = get_handle_l_function(self.format)
+            l_atom_basis = f(l_atom_basis)
         # ~#~#~#~#~ #
         # C h e c k #
         # ~#~#~#~#~ #
 
-        d_check = {"GAMESS-US": check_gamess,
-                   "NWChem": check_NWChem}
-
         if check_format:
-            try:
-                f = d_check[self.format]
-            except KeyError:
-                str_ = """This format is not handle. Chose one of : {}"""
-                print >>sys.stderr, str_.format(format(str(d_check.keys())))
-                sys.exit(1)
-            else:
-                from src.parser import get_symemetry_function
-                f_symmetry = get_symemetry_function(self.format)
+
+                from src.parser import get_symmetry_function
+                from src.check_validity import get_check_function
+
+                f = get_check_function(check_format)
+                f_symmetry = get_symmetry_function(self.format)
 
                 for atom_basis in l_atom_basis:
                     lines = atom_basis.split("\n")
                     for type_, _, _ in f_symmetry(lines):
-                        f(type_)
+                        try:
+                            f(type_)
+                        except AssertionError:
+                            print "False. You have somme special function like SP"
+                            sys.exit(1)
+                        except BaseException:
+                            print "Fail !"
+                            sys.exit(1)
 
         # ~#~#~#~#~#~ #
         # R e t u r n #

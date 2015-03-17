@@ -191,17 +191,28 @@ format_dict = {"Gaussian94": None,
 #         __/ |                                   __/ |
 #        |___/                                   |___/
 
+"""
+Return the begin and the end of all the type of orbital
+input: atom_basis = [name, S 1, 12 0.12 12212, ...]
+output: [ [type, begin, end], ...]
+"""
+
 symmetry_dict = {"GAMESS-US": l_symmetry_gamess_us}
 
 
-def get_symemetry_function(format):
-            try:
-                l_symmetry = symmetry_dict[format]
-            except KeyError:
-                print >> sys.stderr, "You need to add a function in symmetry_dict"
-                print >> sys.stderr, "for your format ({0})".format(format)
-                sys.exit(1)
-            return l_symmetry
+def get_symmetry_function(format):
+    """
+    Return the begin and the end of all the type of orbital
+    input: atom_basis = [name, S 1, 12 0.12 12212, ...]
+    output: [ [type, begin, end], ...]
+    """
+    try:
+        f = symmetry_dict[format]
+    except KeyError:
+        print >> sys.stderr, "You need to add a function in symmetry_dict"
+        print >> sys.stderr, "for your format ({0})".format(format)
+        sys.exit(1)
+    return f
 
 #  _   _                 _ _        _ _ _    _ _  ______ _      _
 # | | | |               | | |      ( | ) |  ( | ) |  _  (_)    | |
@@ -210,4 +221,22 @@ def get_symemetry_function(format):
 # | | | | (_| | | | | (_| | |  __/     | |____    | |/ /| | (__| |_
 # \_| |_/\__,_|_| |_|\__,_|_|\___|     \_____/    |___/ |_|\___|\__|
 
+"""
+Tranforme SP special function (create using get_symmetry_function) into S and P
+"""
+
 handle_l_dict = {"GAMESS-US": handle_l_gamess_us}
+
+
+def get_handle_l_function(format):
+    """
+    Tranforme SP special function (create using get_symmetry_function)
+    into S and P
+    """
+    try:
+        f = handle_l_dict[format]
+    except KeyError:
+        print >> sys.stderr, "You need to add a function in handle_l_dict"
+        print >> sys.stderr, "for your format ({0})".format(format)
+        sys.exit(1)
+    return f
