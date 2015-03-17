@@ -119,7 +119,6 @@ class EMSL_local:
         #          Else Get name,description
         #       3) Parse it
 
-
         # ~#~#~#~#~#~ #
         # F i l t e r #
         # ~#~#~#~#~#~ #

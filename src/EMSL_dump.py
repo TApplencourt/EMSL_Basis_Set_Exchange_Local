@@ -39,7 +39,6 @@ class EMSL_dump:
     """
 
     def __init__(self, db_path=None, format="GAMESS-US", contraction="True"):
-        self.db_path = db_path
 
         if format not in format_dict:
             print >> sys.stderr, "Format {0} doesn't exist. Choose in:".format(
@@ -56,6 +55,12 @@ class EMSL_dump:
                 print >> sys.stderr, "Fill free to Fock /pull request"
                 print >> sys.stderr, "You just need to add a function like"
                 print >> sys.stderr, "'parse_basis_data_gamess_us' to parse you'r format"
+
+        if db_path:
+            self.db_path = db_path
+        else:
+            head_path = os.path.dirname(__file__)
+            self.db_path = "{0}/../db/{1}.db".format(head_path, self.format)
 
         self.contraction = str(contraction)
         self.debug = True
@@ -233,7 +238,6 @@ class EMSL_dump:
                         basis_data = self.parser(text, name, des, elts,
                                                  self.debug)
                     except:
-                        raise
                         time.sleep(0.1)
                         attemps += 1
                     else:

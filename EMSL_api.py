@@ -17,9 +17,9 @@ Usage:
                              [--check=<program_name>]
                              [--treat_l]
   EMSL_api.py list_formats
-  EMSL_api.py create_db      --db_path=<db_path>
-                             --format=<format>
-                             [--no-contraction]
+  EMSL_api.py create_db  --format=<format>
+                        [--db_path=<db_path>]
+                        [--no-contraction]
   EMSL_api.py (-h | --help)
   EMSL_api.py --version
 
