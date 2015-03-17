@@ -5,7 +5,6 @@ import time
 import sqlite3
 
 from collections import OrderedDict
-from src.parser_handler import format_dict
 
 
 def install_with_pip(name):
@@ -40,21 +39,11 @@ class EMSL_dump:
 
     def __init__(self, db_path=None, format="GAMESS-US", contraction="True"):
 
-        if format not in format_dict:
-            print >> sys.stderr, "Format {0} doesn't exist. Choose in:".format(
-                format)
-            print >> sys.stderr, format_dict.keys()
-            sys.exit(1)
-        else:
-            self.format = format
+        from src.parser_handler import get_parser_function
+        from src.parser_handler import check_format
 
-            if format_dict[self.format]:
-                self.parser = format_dict[self.format]
-            else:
-                print >> sys.stderr, "We have no parser for this format"
-                print >> sys.stderr, "Fill free to Fock /pull request"
-                print >> sys.stderr, "You just need to add a function like"
-                print >> sys.stderr, "'parse_basis_data_gamess_us' to parse you'r format"
+        self.format = check_format(format)
+        self.parser = get_parser_function(self.format)
 
         if db_path:
             self.db_path = db_path
@@ -75,7 +64,8 @@ class EMSL_dump:
 
     def get_list_format(self):
         """List all the format available in EMSL"""
-        return format_dict
+        from src.parser_handler import parser_dict
+        return parser_dict.keys()
 
     def set_db_path(self, path):
         """Define the database path"""

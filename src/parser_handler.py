@@ -29,8 +29,9 @@ from src.parser.gaussian94 import parse_basis_data_gaussian94
 from src.parser.nwchem import parse_basis_data_nwchem
 
 
-format_dict = {"Gaussian94": parse_basis_data_gaussian94,
+parser_dict = {"Gaussian94": parse_basis_data_gaussian94,
                "GAMESS-US": parse_basis_data_gamess_us,
+               "NWChem": parse_basis_data_nwchem,
                "GAMESS-UK": None,
                "Turbomole": None,
                "TX93": None,
@@ -43,8 +44,34 @@ format_dict = {"Gaussian94": parse_basis_data_gaussian94,
                "Dalton": None,
                "deMon-KS": None,
                "deMon2k": None,
-               "AcesII": None,
-               "NWChem": parse_basis_data_nwchem}
+               "AcesII": None}
+
+
+def check_format(format):
+    try:
+        parser_dict[format]
+    except KeyError:
+        str_ = ["This format ({0}) is not available in EMSL".format(format),
+                "EMSL provide this list : {0}".format(parser_dict.keys())]
+        print >> sys.stderr, "\n".join(str_)
+        sys.exit(1)
+    else:
+        return format
+
+
+def get_parser_function(format):
+    if not parser_dict[format]:
+        list_parser = [k for k, v in parser_dict.iteritems() if v]
+
+        str_ = ["We have no parser for this format {0}".format(format),
+                "We only support {0}".format(list_parser),
+                "Fill free to Fock /pull request",
+                "You just need to add a function like this one:",
+                "'src.pars.gamess_us.parse_basis_data_gamess_us'"]
+        print >> sys.stderr, "\n".join(str_)
+        sys.exit(1)
+    else:
+        return parser_dict[format]
 
 #  _____                                _                    _ _      _
 # /  ___|                              | |                  | (_)    | |
@@ -78,7 +105,8 @@ def get_symmetry_function(format):
         print >> sys.stderr, "You need to add a function in symmetry_dict"
         print >> sys.stderr, "for your format ({0})".format(format)
         sys.exit(1)
-    return f
+    else:
+        return f
 
 #  _   _                 _ _        _ _ _    _ _  ______ _      _
 # | | | |               | | |      ( | ) |  ( | ) |  _  (_)    | |
@@ -106,4 +134,5 @@ def get_handle_l_function(format):
         print >> sys.stderr, "You need to add a function in handle_l_dict"
         print >> sys.stderr, "for your format ({0})".format(format)
         sys.exit(1)
-    return f
+    else:
+        return f
