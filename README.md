@@ -5,7 +5,7 @@ EMSL_Basis_Set_Exchange_Local
 Create of Local Copy of the famous [EMSL Basis Set Exchange](https://bse.pnl.gov/bse/portal) and use it easily with the API.
 
 * Make a slight copy (40Mo Sqlite3 database) of the EMSL Basis Set Exchange website. Currently avalaible format are :
- * Currently available are : Gamess-us, Gaussian94 and NEWCHEM;
+ *  Gamess-us, Gaussian94 and NEWCHEM;
 * API for scripting;  
 * Quick local access without delay;
 * Only need [Python](https://www.python.org/)
@@ -71,7 +71,7 @@ For now  we can only parse `Gamess-us, Gaussian94 and NEWCHEM` (Thanks to @mattb
 
 I realy simple. Just read the few explanation bellow.
 
-You just need to provide a function who will split the basis data who containt all the atoms in atom only.
+You just need to provide a function who will split the basis data who containt all the atoms in atom only tuple.
 
 Sommething like this:
 ```python
