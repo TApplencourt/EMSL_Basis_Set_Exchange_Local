@@ -270,6 +270,7 @@ class EMSL_local:
             from src.parser import get_handle_l_function
             f = get_handle_l_function(self.format)
             l_atom_basis = f(l_atom_basis)
+
         # ~#~#~#~#~ #
         # C h e c k #
         # ~#~#~#~#~ #
