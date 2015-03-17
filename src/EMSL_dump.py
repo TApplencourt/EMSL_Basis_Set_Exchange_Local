@@ -5,7 +5,7 @@ import time
 import sqlite3
 
 from collections import OrderedDict
-from src.parser import format_dict
+from src.parser_handler import format_dict
 
 
 def install_with_pip(name):
@@ -233,6 +233,7 @@ class EMSL_dump:
                         basis_data = self.parser(text, name, des, elts,
                                                  self.debug)
                     except:
+                        raise
                         time.sleep(0.1)
                         attemps += 1
                     else:

@@ -1,0 +1,109 @@
+import sys
+import os
+import re
+
+
+def get_dict_ele():
+    """Return dict[atom]=[abreviation]"""
+    elt_path = os.path.dirname(sys.argv[0]) + "/src/misc/elts_abrev.dat"
+
+    with open(elt_path, "r") as f:
+        data = f.readlines()
+
+    dict_ele = dict()
+    for i in data:
+        l = i.split("-")
+        dict_ele[l[1].strip().lower()] = l[2].strip().lower()
+
+    return dict_ele
+
+# ______                         _         _ _      _
+# |  ___|                       | |       | (_)    | |
+# | |_ _ __ ___  _ __ ___   __ _| |_    __| |_  ___| |_
+# |  _| '__/ _ \| '_ ` _ \ / _` | __|  / _` | |/ __| __|
+# | | | | | (_) | | | | | | (_| | |_  | (_| | | (__| |_
+# \_| |_|  \___/|_| |_| |_|\__,_|\__|  \__,_|_|\___|\__|
+#
+from src.parser.gamess_us import parse_basis_data_gamess_us
+from src.parser.gaussian94 import parse_basis_data_gaussian94
+from src.parser.nwchem import parse_basis_data_nwchem
+
+
+format_dict = {"Gaussian94": parse_basis_data_gaussian94,
+               "GAMESS-US": parse_basis_data_gamess_us,
+               "GAMESS-UK": None,
+               "Turbomole": None,
+               "TX93": None,
+               "Molpro": None,
+               "MolproInt": None,
+               "Hondo": None,
+               "SuperMolecule": None,
+               "Molcas": None,
+               "HyperChem": None,
+               "Dalton": None,
+               "deMon-KS": None,
+               "deMon2k": None,
+               "AcesII": None,
+               "NWChem": parse_basis_data_nwchem}
+
+#  _____                                _                    _ _      _
+# /  ___|                              | |                  | (_)    | |
+# \ `--. _   _ _ __ ___  _ __ ___   ___| |_ _ __ _   _    __| |_  ___| |_
+#  `--. \ | | | '_ ` _ \| '_ ` _ \ / _ \ __| '__| | | |  / _` | |/ __| __|
+# /\__/ / |_| | | | | | | | | | | |  __/ |_| |  | |_| | | (_| | | (__| |_
+# \____/ \__, |_| |_| |_|_| |_| |_|\___|\__|_|   \__, |  \__,_|_|\___|\__|
+#         __/ |                                   __/ |
+#        |___/                                   |___/
+
+"""
+Return the begin and the end of all the type of orbital
+input: atom_basis = [name, S 1, 12 0.12 12212, ...]
+output: [ [type, begin, end], ...]
+"""
+
+from src.parser.gamess_us import l_symmetry_gamess_us
+
+symmetry_dict = {"GAMESS-US": l_symmetry_gamess_us}
+
+
+def get_symmetry_function(format):
+    """
+    Return the begin and the end of all the type of orbital
+    input: atom_basis = [name, S 1, 12 0.12 12212, ...]
+    output: [ [type, begin, end], ...]
+    """
+    try:
+        f = symmetry_dict[format]
+    except KeyError:
+        print >> sys.stderr, "You need to add a function in symmetry_dict"
+        print >> sys.stderr, "for your format ({0})".format(format)
+        sys.exit(1)
+    return f
+
+#  _   _                 _ _        _ _ _    _ _  ______ _      _
+# | | | |               | | |      ( | ) |  ( | ) |  _  (_)    | |
+# | |_| | __ _ _ __   __| | | ___   V V| |   V V  | | | |_  ___| |_
+# |  _  |/ _` | '_ \ / _` | |/ _ \     | |        | | | | |/ __| __|
+# | | | | (_| | | | | (_| | |  __/     | |____    | |/ /| | (__| |_
+# \_| |_/\__,_|_| |_|\__,_|_|\___|     \_____/    |___/ |_|\___|\__|
+
+"""
+Tranforme SP special function (create using get_symmetry_function) into S and P
+"""
+from src.parser.gamess_us import handle_l_gamess_us
+
+handle_l_dict = {"GAMESS-US": handle_l_gamess_us}
+
+
+def get_handle_l_function(format):
+    """
+    Tranforme SP special function (create using get_symmetry_function)
+    into S and P
+    """
+    try:
+        f = handle_l_dict[format]
+    except KeyError:
+        print >> sys.stderr, "You need to add a function in handle_l_dict"
+        print >> sys.stderr, "for your format ({0})".format(format)
+        sys.exit(1)
+    return f

@@ -38,11 +38,11 @@ Example of use:
     ./EMSL_api.py get_basis_data --basis 3-21++G*
 """
 
-version = "0.3.0"
+version = "0.8.1"
 
 import os
 
-from src.docopt import docopt
+from src.misc.docopt import docopt
 from src.EMSL_dump import EMSL_dump
 from src.EMSL_local import EMSL_local, checkSQLite3
 

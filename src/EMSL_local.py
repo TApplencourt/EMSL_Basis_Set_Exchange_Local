@@ -192,7 +192,7 @@ class EMSL_local:
         dict_info = OrderedDict()
         # Description : dict_info[name] = [description, nb_mo, nb_ele]
 
-        from src.parser import get_symmetry_function
+        from src.parser_handler import get_symmetry_function
         if average_mo_number:
 
             f_symmetry = get_symmetry_function(self.format)
@@ -267,7 +267,7 @@ class EMSL_local:
         # h a n d l e _ f #
         # ~#~#~#~#~#~#~#~ #
         if handle_l_format:
-            from src.parser import get_handle_l_function
+            from src.parser_handler import get_handle_l_function
             f = get_handle_l_function(self.format)
             l_atom_basis = f(l_atom_basis)
 
@@ -277,8 +277,8 @@ class EMSL_local:
 
         if check_format:
 
-                from src.parser import get_symmetry_function
-                from src.check_validity import get_check_function
+                from src.parser_handler import get_symmetry_function
+                from src.parser.check_validity import get_check_function
 
                 f = get_check_function(check_format)
                 f_symmetry = get_symmetry_function(self.format)
