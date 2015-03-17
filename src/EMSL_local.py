@@ -229,13 +229,13 @@ class EMSL_local:
 
         str_ = """SELECT DISTINCT elt
                   FROM output_tab
-                  WHERE name=:name_us COLLATE NOCASE"""
+                  WHERE name=(?) COLLATE NOCASE"""
 
         # ~#~#~#~#~ #
         # F e t c h #
         # ~#~#~#~#~ #
 
-        self.c.execute(str_, {"name_us": basis_name})
+        self.c.execute(str_, basis_name)
 
         # ~#~#~#~#~#~ #
         # R e t u r n #
