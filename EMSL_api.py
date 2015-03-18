@@ -4,12 +4,12 @@
 """EMSL Api.
 
 Usage:
-  EMSL_api.py list_basis  [--basis=<basis_name>...]
-                          [--atom=<atom_name>...]
-                          [--db_path=<db_path>]
-                          [--average_mo_number]
-  EMSL_api.py list_atoms  --basis=<basis_name>
-                          [--db_path=<db_path>]
+  EMSL_api.py list_basis [--basis=<basis_name>...]
+                         [--atom=<atom_name>...]
+                         [--db_path=<db_path>]
+                         [--average_mo_number]
+  EMSL_api.py list_atoms --basis=<basis_name>
+                         [--db_path=<db_path>]
   EMSL_api.py get_basis_data --basis=<basis_name>
                              [--atom=<atom_name>...]
                              [--db_path=<db_path>]
@@ -17,7 +17,7 @@ Usage:
                              [--check=<program_name>]
                              [--treat_l]
   EMSL_api.py list_formats
-  EMSL_api.py create_db  --format=<format>
+  EMSL_api.py create_db --format=<format>
                         [--db_path=<db_path>]
                         [--no-contraction]
   EMSL_api.py (-h | --help)
