@@ -10,7 +10,7 @@ Create of Local Copy of the famous [EMSL Basis Set Exchange](https://bse.pnl.gov
 * Quick local access without delay;
 * Only need [Python](https://www.python.org/)
 
-##Dependency
+##Dependencies
 * Python >2.6
 
 ###### Optional
