@@ -52,7 +52,7 @@ class EMSL_dump:
             self.db_path = "{0}/../db/{1}.db".format(head_path, self.format)
 
         self.contraction = str(contraction)
-        self.debug = True
+        self.debug = False
 
         try:
             import requests
