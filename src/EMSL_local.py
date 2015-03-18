@@ -11,6 +11,10 @@ def checkSQLite3(db_path):
 
     from os.path import isfile, getsize
 
+    db_path = os.path.expanduser(db_path)
+    db_path = os.path.expandvars(db_path)
+    db_path = os.path.abspath(db_path)
+
     # Check if db file is readable
     if not os.access(db_path, os.R_OK):
         print >>sys.stderr, "Db file %s is not readable" % (db_path)
