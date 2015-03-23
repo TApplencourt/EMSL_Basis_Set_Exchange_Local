@@ -63,7 +63,8 @@ class EMSL_dump:
         finally:
             self.requests = requests
 
-    def get_list_format(self):
+    @staticmethod
+    def get_list_format():
         """List all the format available in EMSL"""
         from src.parser_handler import parser_dict
         return parser_dict.keys()
@@ -135,6 +136,7 @@ class EMSL_dump:
 
                 name = tup[1]
                 elts = re.sub('[["\ \]]', '', tup[3]).split(',')
+
                 des = re.sub('\s+', ' ', tup[-1])
 
                 d[name] = [name, xml_path, des, elts]
@@ -148,7 +150,7 @@ class EMSL_dump:
     # | \__/\ | |  __/ (_| | ||  __/
     #  \____/_|  \___|\__,_|\__\___|
     #
-    def create_sql(self, dict_basis_list):
+    def create_and_populate_sql(self, dict_basis_list):
         """Create the sql from strach.
             Take the list of basis available data,
             download her, put her in sql"""
@@ -216,7 +218,8 @@ class EMSL_dump:
                 url = "https://bse.pnl.gov:443/bse/portal/user/anon/js_peid/11535052407933/action/portlets.BasisSetAction/template/courier_content/panel/Main/"
                 url += "/eventSubmit_doDownload/true"
 
-                params = {'bsurl': path_xml, 'bsname': name,
+                params = {'bsurl': path_xml,
+                          'bsname': name,
                           'elts': " ".join(elts),
                           'format': self.format,
                           'minimize': self.contraction}
@@ -289,4 +292,4 @@ class EMSL_dump:
         _data = self.dwl_basis_list_raw()
         array_basis = self.basis_list_raw_to_array(_data)
 
-        self.create_sql(array_basis)
+        self.create_and_populate_sql(array_basis)

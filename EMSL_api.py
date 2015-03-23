@@ -141,8 +141,7 @@ if __name__ == '__main__':
     # | |___| \__ \ |_  | || (_) | |  | | | | | | (_| | |_\__ \
     # \_____/_|___/\__| |_| \___/|_|  |_| |_| |_|\__,_|\__|___/
     elif arguments["list_formats"]:
-        e = EMSL_dump()
-        for i in e.get_list_format():
+        for i in EMSL_dump.get_list_format():
             print i
 
     #  _____                _             _ _
