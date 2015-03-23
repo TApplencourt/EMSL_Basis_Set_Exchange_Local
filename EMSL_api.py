@@ -44,7 +44,7 @@ import os
 
 from src.misc.docopt import docopt
 from src.EMSL_dump import EMSL_dump
-from src.EMSL_local import EMSL_local, checkSQLite3
+from src.EMSL_local import EMSL_local
 
 if __name__ == '__main__':
 
@@ -63,6 +63,7 @@ if __name__ == '__main__':
     # Check the db
     try:
         if not(arguments['create_db']):
+            from src.EMSL_local import checkSQLite3
             db_path, db_path_changed = checkSQLite3(db_path)
     except:
         raise

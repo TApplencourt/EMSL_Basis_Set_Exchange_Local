@@ -32,7 +32,6 @@ def install_with_pip(name):
 
 
 class EMSL_dump:
-
     """
     This call implement all you need for download the EMSL and save it localy
     """
@@ -50,10 +49,11 @@ class EMSL_dump:
             self.db_path = db_path
         else:
             head_path = os.path.dirname(__file__)
-            self.db_path = "{0}/../db/{1}.db".format(head_path, self.format)
+            db_path = "{0}/../db/{1}.db".format(head_path, self.format)
+            self.db_path = os.path.abspath(db_path)
 
         self.contraction = str(contraction)
-        self.debug = False
+        self.debug = True
 
         try:
             import requests
@@ -82,13 +82,9 @@ class EMSL_dump:
             dbcache = 'db/cache'
             if not os.path.isfile(dbcache):
                 page = self.requests.get(url).text
-                file = open(dbcache, 'w')
-                pickle.dump(page, file)
+                pickle.dump(page, open(dbcache, 'wb'))
             else:
-                file = open(dbcache, 'r')
-                page = pickle.load(file)
-            file.close()
-
+                page = pickle.load(open(dbcache, 'rb'))
         else:
             page = self.requests.get(url).text
 
