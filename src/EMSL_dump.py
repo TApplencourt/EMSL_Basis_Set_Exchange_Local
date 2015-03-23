@@ -45,6 +45,7 @@ class EMSL_dump:
         self.format = check_format(format)
         self.parser = get_parser_function(self.format)
 
+        """Define the database path"""
         if db_path:
             self.db_path = db_path
         else:
@@ -66,10 +67,6 @@ class EMSL_dump:
         """List all the format available in EMSL"""
         from src.parser_handler import parser_dict
         return parser_dict.keys()
-
-    def set_db_path(self, path):
-        """Define the database path"""
-        self.db_path = path
 
     def dwl_basis_list_raw(self):
         """Return the source code of the iframe
@@ -204,7 +201,14 @@ class EMSL_dump:
         num_worker_threads = 7
         attemps_max = 20
 
-        q_in = Queue.Queue(num_worker_threads)
+        # All the task need to be executed
+        nb_basis = len(dict_basis_list)
+        q_in = Queue.Queue(nb_basis)
+        # Populate the  q_in list
+        for [name, path_xml, des, elts] in dict_basis_list.itervalues():
+                q_in.put([name, path_xml, des, elts])
+
+        # All the queue who have been executed
         q_out = Queue.Queue(num_worker_threads)
 
         def worker():
@@ -239,26 +243,15 @@ class EMSL_dump:
                     if self.debug:
                         print "Fail on q_out.put", basis_data
                     raise
-                else:
-                    q_in.task_done()
 
-        def enqueue():
-            for [name, path_xml, des, elts] in dict_basis_list.itervalues():
-                q_in.put([name, path_xml, des, elts])
-
-            return 0
-
-        t = threading.Thread(target=enqueue)
-        t.daemon = True
-        t.start()
-
+        # Create all the worker (q_in |> worker |> q_out)
         for i in range(num_worker_threads):
             t = threading.Thread(target=worker)
             t.daemon = True
             t.start()
 
-        nb_basis = len(dict_basis_list)
-
+        # Take the result from the out queue (populate by the worker)
+        # and put in in the SQL database
         for i in range(nb_basis):
             name, des, basis_data = q_out.get()
             q_out.task_done()
