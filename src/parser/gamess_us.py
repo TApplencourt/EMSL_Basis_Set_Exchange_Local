@@ -136,3 +136,16 @@ def handle_l_gamess_us(l_atom_basis):
         l_data.append("\n".join(l_line))
 
     return l_data
+
+
+def check_gamess(str_type):
+    """Check is the orbital type is handle by gamess"""
+
+    assert len(str_type) == 1
+
+    if str_type in "S P D".split():
+        return True
+    elif str_type == "SP":
+        raise BaseException
+    else:
+        return True

@@ -226,3 +226,16 @@ def parse_basis_data_nwchem(data, name, description, elements, debug=True):
         serialized = json.dumps(chunk)
         pairs.append([symbol, serialized])
     return [name, description, pairs]
+
+
+def check_NWChem(str_type):
+    """Check is the orbital type is handle by gamess"""
+
+    assert len(str_type) == 1
+
+    if str_type in "S P D".split():
+        return True
+    elif str_type > "I" or str_type in "K L M".split():
+        raise BaseException
+    else:
+        return True

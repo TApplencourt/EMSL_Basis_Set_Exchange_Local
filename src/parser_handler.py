@@ -128,10 +128,38 @@ def get_handle_l_function(format):
     into S and P
     """
     try:
-        f = handle_l_dict[format]
+        return handle_l_dict[format]
     except KeyError:
         print >> sys.stderr, "You need to add a function in handle_l_dict"
         print >> sys.stderr, "for your format ({0})".format(format)
         sys.exit(1)
-    else:
-        return f
+
+
+#  _   _       _ _     _       _   _
+# | | | |     | (_)   | |     | | (_)
+# | | | | __ _| |_  __| | __ _| |_ _  ___  _ __
+# | | | |/ _` | | |/ _` |/ _` | __| |/ _ \| '_ \
+# \ \_/ / (_| | | | (_| | (_| | |_| | (_) | | | |
+#  \___/ \__,_|_|_|\__,_|\__,_|\__|_|\___/|_| |_|
+#
+from src.parser.gamess_us import check_gamess
+from src.parser.nwchem import check_NWChem
+
+d_check = {"GAMESS-US": check_gamess,
+           "NWChem": check_NWChem}
+
+
+def get_check_function(name_program):
+    """
+    Tranforme SP special function (create using get_symmetry_function)
+    into S and P
+    """
+
+    try:
+        return d_check[name_program]
+    except KeyError:
+        str_ = "You need to add a check funtion for your program {0}"
+        print >> sys.stderr, str_.format(name_program)
+        print >> sys.stderr, "This one are avalaible {0}".format(
+            d_check.keys())
+        sys.exit(1)

@@ -251,6 +251,12 @@ class EMSL_local(object):
                   handle_l_format=False, check_format=None):
         """
         Return the data from the basis set
+        basis_name : The value of 'name'raw from output_tab in the SQL database
+        elts : List of element avalaible in 'elt'raw
+        handle_l_format : If you want to use special treatement for SP function
+                        (see src.parser_handler.get_handle_l_function)
+        check_format : If you want to verify some condition for special program
+                       (see src.parser.check_validity)
         """
 
         # ~#~#~#~#~#~ #
@@ -281,7 +287,7 @@ class EMSL_local(object):
         if check_format:
 
                 from src.parser_handler import get_symmetry_function
-                from src.parser.check_validity import get_check_function
+                from src.parser_handler import get_check_function
 
                 f = get_check_function(check_format)
                 f_symmetry = get_symmetry_function(self.format)
