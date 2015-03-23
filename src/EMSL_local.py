@@ -93,7 +93,7 @@ def string_to_nb_mo(str_type):
 # |_ |\/| (_  |    |   _   _  _. |
 # |_ |  | __) |_   |_ (_) (_ (_| |
 #
-class EMSL_local:
+class EMSL_local(object):
 
     """
     All the method for using the EMSL db localy
@@ -302,16 +302,3 @@ class EMSL_local:
         # R e t u r n #
         # ~#~#~#~#~#~ #
         return l_atom_basis
-if __name__ == "__main__":
-
-    e = EMSL_local(db_path="EMSL.db")
-    l = e.get_list_basis_available()
-    for i in l:
-        print i
-
-    l = e.get_list_element_available("pc-0")
-    print l
-
-    l = e.get_basis("cc-pVTZ", ["H", "He"])
-    for i in l:
-        print i
