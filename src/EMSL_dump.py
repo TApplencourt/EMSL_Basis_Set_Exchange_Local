@@ -2,7 +2,13 @@ import os
 import sys
 import re
 import time
-import sqlite3
+
+try:
+    import sqlite3
+except ImportError:
+    print "you maybe need libsqlite3-dev from the package manager"
+    print "and the recompile Python"
+    raise
 
 from collections import OrderedDict
 
