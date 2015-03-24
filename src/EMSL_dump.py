@@ -39,7 +39,7 @@ def install_with_pip(name):
 
 class EMSL_dump:
     """
-    This call implement all you need for download the EMSL and save it localy
+    This class implement all you need for download the EMSL and save it localy
     """
 
     def __init__(self, db_path=None, format="GAMESS-US", contraction="True"):
