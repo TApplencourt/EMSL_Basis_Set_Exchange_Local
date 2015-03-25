@@ -267,7 +267,7 @@ class EMSL_local(object):
         cmd_filter_ele = cond_sql_or("elt", elts) if elts else "(1)"
 
         self.c.execute('''SELECT DISTINCT data from output_tab
-                     WHERE name="{0}"
+                     WHERE name LIKE "{0}"
                      AND  ({1})'''.format(basis_name, cmd_filter_ele))
 
         # We need to take i[0] because fetchall return a tuple [(value),...]
