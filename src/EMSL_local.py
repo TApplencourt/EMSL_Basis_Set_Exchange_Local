@@ -63,13 +63,14 @@ def checkSQLite3(db_path):
 
 
 def cond_sql_or(table_name, l_value, glob=False):
-    """Take a table_name, a list of value and create the sql or combande"""
+    """Take a table_name, a list of value and create the sql 'or' commande
+       for example : (elt = "Na" OR elt = "Mg"')"""
 
     opr = "GLOB" if glob else "="
 
-    return [" OR ".join(['{} {} "{}"'.format(table_name,
-                                             opr,
-                                             val) for val in l_value])]
+    l_cmd = ['{} {} "{}"'.format(table_name, opr, val) for val in l_value]
+
+    return "({0})".format(" OR ".join(l_cmd))
 
 
 def string_to_nb_mo(str_type):
@@ -128,7 +129,7 @@ class EMSL_local(object):
         # ~#~#~#~#~#~ #
 
         if basis:
-            cmd_filter_basis = " ".join(cond_sql_or("name", basis, glob=True))
+            cmd_filter_basis = cond_sql_or("name", basis, glob=True)
         else:
             cmd_filter_basis = "(1)"
 
@@ -164,8 +165,8 @@ class EMSL_local(object):
             # C r e a t e _ t h e _ c m d #
             # ~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
 
-            cmd_filter_basis = " ".join(cond_sql_or("basis_id", l_basis_id))
-            cmd_filter_ele = " ".join(cond_sql_or("elt", elts))
+            cmd_filter_basis = cond_sql_or("basis_id", l_basis_id)
+            cmd_filter_ele = cond_sql_or("elt", elts)
 
             column_to_fech = "name, description"
             if average_mo_number:
@@ -263,11 +264,11 @@ class EMSL_local(object):
         # F i l t e r #
         # ~#~#~#~#~#~ #
 
-        cmd_filter_ele = " ".join(cond_sql_or("elt", elts)) if elts else "(1)"
+        cmd_filter_ele = cond_sql_or("elt", elts) if elts else "(1)"
 
         self.c.execute('''SELECT DISTINCT data from output_tab
                      WHERE name="{0}"
-                     AND  {1}'''.format(basis_name, cmd_filter_ele))
+                     AND  ({1})'''.format(basis_name, cmd_filter_ele))
 
         # We need to take i[0] because fetchall return a tuple [(value),...]
         l_atom_basis = [i[0].strip() for i in self.c.fetchall()]
