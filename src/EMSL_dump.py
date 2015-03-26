@@ -261,7 +261,7 @@ class EMSL_dump:
             name, des, basis_data = q_out.get()
             q_out.task_done()
 
-            str_indice = '{:>3}'.format(i + 1)
+            str_indice = '{0:>3}'.format(i + 1)
             str_ = '{0} / {1} | {2}'.format(str_indice, nb_basis, name)
 
             # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #

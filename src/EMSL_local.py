@@ -68,7 +68,7 @@ def cond_sql_or(table_name, l_value, glob=False):
 
     opr = "GLOB" if glob else "="
 
-    l_cmd = ['{} {} "{}"'.format(table_name, opr, val) for val in l_value]
+    l_cmd = ['{0} {1} "{2}"'.format(table_name, opr, val) for val in l_value]
 
     return "({0})".format(" OR ".join(l_cmd))
 
@@ -172,9 +172,8 @@ class EMSL_local(object):
             if average_mo_number:
                 column_to_fech += ", data"
 
-            filter_where = " ({}) AND ({})".format(
-                cmd_filter_ele,
-                cmd_filter_basis)
+            filter_where = " ({0}) AND ({1})".format(cmd_filter_ele,
+                                                     cmd_filter_basis)
 
             cmd = """SELECT DISTINCT {0}
                      FROM output_tab
@@ -192,7 +191,7 @@ class EMSL_local(object):
         # ~#~#~#~#~#~#~ #
         # If average_mo_number is asking
 
-        from collections import OrderedDict
+        from misc.collections import OrderedDict
         dict_info = OrderedDict()
         # Description : dict_info[name] = [description, nb_mo, nb_ele]
 
