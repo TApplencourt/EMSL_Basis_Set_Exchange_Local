@@ -10,7 +10,7 @@ except ImportError:
     print "and the recompile Python"
     raise
 
-from collections import OrderedDict
+from misc.collections import OrderedDict
 
 
 def install_with_pip(name):
