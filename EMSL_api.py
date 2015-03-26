@@ -84,11 +84,11 @@ if __name__ == '__main__':
 
         if arguments["--average_mo_number"]:
             for name, des, avg in l:
-                des_str = "{:<50}".format(des)
+                des_str = "{0:<50}".format(des)
                 print "- '{0}' ({1}) || {2}".format(name, avg, des_str)
         else:
             for name, des in l:
-                des_str = "{:<50}".format(des)
+                des_str = "{0:<50}".format(des)
                 print "- '{0}' || {1}".format(name, des_str)
 
     #  _     _     _     _____ _                           _
