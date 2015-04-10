@@ -116,13 +116,13 @@ def handle_l_gamess_us(l_atom_basis):
                     # one L =>  S & P
                     a = i_l.split()
 
-                    common = "{:>3}".format(a[0])
-                    common += "{:>15.7f}".format(float(a[1]))
+                    common = "{0:>3}".format(a[0])
+                    common += "{0:>15.7f}".format(float(a[1]))
 
-                    tail_s = common + "{:>23.7f}".format(float(a[2]))
+                    tail_s = common + "{0:>23.7f}".format(float(a[2]))
                     body_s.append(tail_s)
 
-                    tail_p = common + "{:>23.7f}".format(float(a[3]))
+                    tail_p = common + "{0:>23.7f}".format(float(a[3]))
                     body_p.append(tail_p)
 
                 l_line += [l_line_raw[begin].replace("L", "S")]
