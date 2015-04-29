@@ -64,7 +64,7 @@ def checkSQLite3(db_path):
 
 def cond_sql_or(table_name, l_value, glob=False):
     """Take a table_name, a list of value and create the sql 'or' commande
-       for example : (elt = "Na" OR elt = "Mg"')"""
+       for example : (elt = "Na" OR elt = "Mg")"""
 
     opr = "GLOB" if glob else "="
 
