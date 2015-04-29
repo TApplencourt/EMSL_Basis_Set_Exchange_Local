@@ -76,8 +76,9 @@ class EMSL_dump:
         return parser_dict.keys()
 
     def dwl_basis_list_raw(self):
-        """Return the source code of the iframe
-           who contains the list of the basis set available"""
+        """Return the source code of the iframe who contains the list of the
+        basis set available
+        """
 
         print "Download all the name available in EMSL."
         print "It can take some time.",

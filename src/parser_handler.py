@@ -4,7 +4,7 @@ import os
 
 def get_dict_ele():
     """Return dict[atom]=[abreviation]"""
-    elt_path = os.path.dirname(sys.argv[0]) + "/src/misc/elts_abrev.dat"
+    elt_path = os.path.join(os.path.dirname(sys.argv[0]), "/src/misc/elts_abrev.dat")
 
     with open(elt_path, "r") as f:
         data = f.readlines()

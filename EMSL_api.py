@@ -58,7 +58,8 @@ if __name__ == '__main__':
     if arguments["--db_path"]:
         db_path = arguments["--db_path"]
     else:
-        db_path = os.path.dirname(__file__) + "/db/GAMESS-US.db"
+        db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                               "db/GAMESS-US.db")
 
     # Check the db
     try:
