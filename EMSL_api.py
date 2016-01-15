@@ -6,19 +6,19 @@
 Usage:
   EMSL_api.py list_basis [--basis=<basis_name>...]
                          [--atom=<atom_name>...]
-                         [--db_path=<db_path>]
+                         [--db_path=<db_path> |--db_dump_path=<db_dump_path>]
                          [--average_mo_number]
   EMSL_api.py list_atoms --basis=<basis_name>
-                         [--db_path=<db_path>]
+                         [--db_path=<db_path> |--db_dump_path=<db_dump_path>]
   EMSL_api.py get_basis_data --basis=<basis_name>
                              [--atom=<atom_name>...]
-                             [--db_path=<db_path>]
+                             [--db_path=<db_path> |--db_dump_path=<db_dump_path>]
                              [(--save [--path=<path>])]
                              [--check=<program_name>]
                              [--treat_l]
   EMSL_api.py list_formats
   EMSL_api.py create_db --format=<format>
-                        [--db_path=<db_path>]
+                        [--db_path=<db_path> |--db_dump_path=<db_dump_path>]
                         [--no-contraction]
   EMSL_api.py (-h | --help)
   EMSL_api.py --version
@@ -49,7 +49,6 @@ from src.EMSL_local import EMSL_local
 if __name__ == '__main__':
 
     arguments = docopt(__doc__, version='EMSL Api ' + version)
-
     # ___
     #  |  ._  o _|_
     # _|_ | | |  |_
@@ -57,17 +56,24 @@ if __name__ == '__main__':
 
     if arguments["--db_path"]:
         db_path = arguments["--db_path"]
+        db_dump_path = None
+    elif arguments["--db_dump_path"]:
+    	db_path = None
+    	db_dump_path = arguments["--db_dump_path"]
     else:
-        db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               "db/GAMESS-US.db")
+    	db_dump_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                               "db/GAMESS-US.dump")
+        db_path = None
+#        db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+#                               "db/GAMESS-US.db")
 
     # Check the db
-    try:
-        if not(arguments['create_db']):
-            from src.EMSL_local import checkSQLite3
-            db_path, db_path_changed = checkSQLite3(db_path)
-    except:
-        raise
+#    try:
+#        if not(arguments['create_db']):
+#            from src.EMSL_local import checkSQLite3
+#            db_path, db_path_changed = checkSQLite3(db_path)
+#    except:
+#        raise
 
     #  _     _     _    ______           _
     # | |   (_)   | |   | ___ \         (_)
@@ -77,7 +83,7 @@ if __name__ == '__main__':
     # \_____/_|___/\__| \____/ \__,_|___/_|___/
 
     if arguments["list_basis"]:
-        e = EMSL_local(db_path=db_path)
+        e = EMSL_local(db_path=db_path, db_dump_path=db_dump_path)
 
         l = e.list_basis_available(arguments["--atom"],
                                    arguments["--basis"],
@@ -99,7 +105,7 @@ if __name__ == '__main__':
     # | |___| \__ \ |_  | |___| |  __/ | | | | |  __/ | | | |_\__ \
     # \_____/_|___/\__| \____/|_|\___|_| |_| |_|\___|_| |_|\__|___/
     elif arguments["list_atoms"]:
-        e = EMSL_local(db_path=db_path)
+        e = EMSL_local(db_path=db_path, db_dump_path=db_dump_path)
 
         basis_name = arguments["--basis"]
         l = e.get_list_element_available(basis_name)
@@ -112,7 +118,7 @@ if __name__ == '__main__':
     # | |_/ / (_| \__ \ \__ \ | (_| | (_| | || (_| |
     # \____/ \__,_|___/_|___/  \__,_|\__,_|\__\__,_|
     elif arguments["get_basis_data"]:
-        e = EMSL_local(db_path=db_path)
+        e = EMSL_local(db_path=db_path, db_dump_path=db_dump_path)
         basis_name = arguments["--basis"][0]
         elts = arguments["--atom"]
 
@@ -170,5 +176,5 @@ if __name__ == '__main__':
     #                         _|
 
     # Clean up on exit
-    if not(arguments['create_db']) and db_path_changed:
-        os.system("rm -f /dev/shm/%d.db" % (os.getpid()))
+#    if not(arguments['create_db']) and db_path_changed:
+#        os.system("rm -f /dev/shm/%d.db" % (os.getpid()))

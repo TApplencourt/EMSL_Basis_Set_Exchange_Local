@@ -5,6 +5,7 @@ import re
 import sys
 import os
 
+from misc.sqlit import connect4git
 
 def checkSQLite3(db_path):
     """Check if the db_path is a good one"""
@@ -100,10 +101,16 @@ class EMSL_local(object):
     All the method for using the EMSL db localy
     """
 
-    def __init__(self, db_path=None):
-        self.db_path = db_path
+    def __init__(self, db_path=None, db_dump_path=None):
 
-        self.conn = sqlite3.connect(self.db_path)
+#        print db_path
+#        print db_dump_path
+
+        if db_path:
+            self.conn = sqlite3.connect(db_path)
+        if db_dump_path:
+            self.conn = connect4git(db_dump_path)
+
         self.c = self.conn.cursor()
 
         self.c.execute("SELECT * from format_tab")
