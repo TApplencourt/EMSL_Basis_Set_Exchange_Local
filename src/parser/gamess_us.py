@@ -2,9 +2,11 @@
 # /__  _. ._ _   _   _  _        _
 # \_| (_| | | | (/_ _> _>   |_| _>
 #
+from __future__ import print_function
+
+import re
 
 from src.parser_handler import get_dict_ele
-import re
 
 
 def parse_basis_data_gamess_us(data, name, des, elts, debug=False):
@@ -16,14 +18,14 @@ def parse_basis_data_gamess_us(data, name, des, elts, debug=False):
     e = data.find("$END")
     if (b == -1 or data.find("$DATA$END") != -1):
         if debug:
-            print data
+            print(data)
         raise Exception("WARNING not DATA")
     else:
         dict_replace = {"PHOSPHOROUS": "PHOSPHORUS",
                         "D+": "E+",
                         "D-": "E-"}
 
-        for k, v in dict_replace.iteritems():
+        for k, v in dict_replace.items():
             data = data.replace(k, v)
 
         data = data[b + 5:e - 1].split('\n\n')
@@ -37,22 +39,22 @@ def parse_basis_data_gamess_us(data, name, des, elts, debug=False):
 
             if "$" in data_elt:
                 if debug:
-                    print "Eror",
+                    print("Error", end=' ')
                 raise Exception("WARNING bad split")
 
             if elt_long_th == elt_long_exp:
                 basis_data.append([elt, data_elt.strip()])
             else:
                 if debug:
-                    print "th", elt_long_th
-                    print "exp", elt_long_exp
-                    print "abv", elt
+                    print("th", elt_long_th)
+                    print("exp", elt_long_exp)
+                    print("abv", elt)
                 raise Exception("WARNING not a good ELEMENT")
 
     return (name, des, basis_data)
 
 
-symmetry_regex = re.compile(ur'^(\w)\s+\d+\b')
+symmetry_regex = re.compile(r'^(\w)\s+\d+\b')
 
 
 def l_symmetry_gamess_us(atom_basis):
@@ -66,7 +68,7 @@ def l_symmetry_gamess_us(atom_basis):
 
     l = []
     for i, line in enumerate(atom_basis):
-        # Optimisation for not seaching all the time
+        # Optimisation for not searching all the time
         if len(line) < 10:
             m = re.search(symmetry_regex, line)
             if m:
@@ -74,7 +76,7 @@ def l_symmetry_gamess_us(atom_basis):
                 read_symmetry = m.group(1)
 
                 # L is real L or special SP
-                # Just check the number of exponant
+                # Just check the number of exponent
                 if all([read_symmetry == "L",
                         len(atom_basis[i + 1].split()) == 4]):
                     real_symmetry = "SP"
@@ -102,7 +104,7 @@ def handle_l_gamess_us(l_atom_basis):
         # Split the data in line
         l_line_raw = atom_basis.split("\n")
         l_line = [l_line_raw[0]]
-        # l_line_raw[0] containt the name of the Atom
+        # l_line_raw[0] contains the name of the Atom
 
         for symmetry, begin, end in l_symmetry_gamess_us(l_line_raw):
 
@@ -116,13 +118,13 @@ def handle_l_gamess_us(l_atom_basis):
                     # one L =>  S & P
                     a = i_l.split()
 
-                    common = "{0:>3}".format(a[0])
-                    common += "{0:>15.7f}".format(float(a[1]))
+                    common = "{:>3}".format(a[0])
+                    common += "{:>15.7f}".format(float(a[1]))
 
-                    tail_s = common + "{0:>23.7f}".format(float(a[2]))
+                    tail_s = common + "{:>23.7f}".format(float(a[2]))
                     body_s.append(tail_s)
 
-                    tail_p = common + "{0:>23.7f}".format(float(a[3]))
+                    tail_p = common + "{:>23.7f}".format(float(a[3]))
                     body_p.append(tail_p)
 
                 l_line += [l_line_raw[begin].replace("L", "S")]

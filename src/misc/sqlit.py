@@ -1,12 +1,15 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+from __future__ import print_function
+
 import os
 import sys
+
+from os.path import getsize, isfile
 
 try:
     import sqlite3
 except:
-    print "Sorry, you need sqlite3"
+    print("Sorry, you need sqlite3")
     sys.exit(1)
 
 
@@ -68,8 +71,6 @@ class ConnectionForGit(sqlite3.Connection):
         """
         Verify is filename is a SQLite3 format db
         """
-        from os.path import isfile, getsize
-
         if not isfile(filename):
             return False
         # SQLite database file header is 100 bytes
@@ -93,15 +94,15 @@ class ConnectionForGit(sqlite3.Connection):
         2/ Check the date a modify accordingly
         """
         if not os.path.isfile(dump_path):
-            os.system('touch {0}'.format(dump_path))
+            os.system('touch {}'.format(dump_path))
         if not os.path.isfile(db_path):
-            os.system("sqlite3 {0} < {1}".format(db_path, dump_path))
+            os.system("sqlite3 {} < {}".format(db_path, dump_path))
         else:
             dump_time = os.path.getmtime(dump_path)
             db_time = os.path.getmtime(db_path)
             if dump_time > db_time:
-                os.system("rm {0}".format(db_path))
-                os.system("sqlite3 {0} < {1}".format(db_path, dump_path))
+                os.system("rm {}".format(db_path))
+                os.system("sqlite3 {} < {}".format(db_path, dump_path))
 
     @staticmethod
     def sqlite_to_dump(db_path, dump_path):
@@ -115,8 +116,8 @@ class ConnectionForGit(sqlite3.Connection):
         dump_time = os.path.getmtime(dump_path)
         db_time = os.path.getmtime(db_path)
         if db_time > dump_time:
-            os.system("sqlite3 {0} .dump > {1}".format(db_path, dump_path))
-            os.system("touch {0}".format(db_path))
+            os.system("sqlite3 {} .dump > {}".format(db_path, dump_path))
+            os.system("touch {}".format(db_path))
 
 
 def connect4git(dump_path, db_path=None, *args, **kwargs):
@@ -130,7 +131,7 @@ def connect4git(dump_path, db_path=None, *args, **kwargs):
     '''
 
     if not db_path:
-        db_path = "{0}.db".format(os.path.splitext(dump_path)[0])
+        db_path = "{}.db".format(os.path.splitext(dump_path)[0])
 
     try:
         ConnectionForGit.dump_to_sqlite(dump_path, db_path)

@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 """EMSL Api.
 
@@ -37,14 +36,16 @@ Example of use:
     ./EMSL_api.py list_atoms --basis ANO-RCC
     ./EMSL_api.py get_basis_data --basis 3-21++G*
 """
-
-version = "0.8.1"
+from __future__ import print_function
 
 import os
 
-from src.misc.docopt import docopt
 from src.EMSL_dump import EMSL_dump
 from src.EMSL_local import EMSL_local
+from src.misc.docopt import docopt
+
+version = "0.8.1"
+
 
 if __name__ == '__main__':
 
@@ -58,11 +59,11 @@ if __name__ == '__main__':
         db_path = arguments["--db_path"]
         db_dump_path = None
     elif arguments["--db_dump_path"]:
-    	db_path = None
-    	db_dump_path = arguments["--db_dump_path"]
+        db_path = None
+        db_dump_path = arguments["--db_dump_path"]
     else:
-    	db_dump_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               "db/GAMESS-US.dump")
+        db_dump_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                    "db/GAMESS-US.dump")
         db_path = None
 #        db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
 #                               "db/GAMESS-US.db")
@@ -92,11 +93,11 @@ if __name__ == '__main__':
         if arguments["--average_mo_number"]:
             for name, des, avg in l:
                 des_str = "{0:<50}".format(des)
-                print "- '{0}' ({1}) || {2}".format(name, avg, des_str)
+                print("- '{0}' ({1}) || {2}".format(name, avg, des_str))
         else:
             for name, des in l:
                 des_str = "{0:<50}".format(des)
-                print "- '{0}' || {1}".format(name, des_str)
+                print("- '{0}' || {1}".format(name, des_str))
 
     #  _     _     _     _____ _                           _
     # | |   (_)   | |   |  ___| |                         | |
@@ -109,7 +110,7 @@ if __name__ == '__main__':
 
         basis_name = arguments["--basis"]
         l = e.get_list_element_available(basis_name)
-        print ", ".join(l)
+        print(", ".join(l))
 
     # ______           _           _       _
     # | ___ \         (_)         | |     | |
@@ -139,9 +140,9 @@ if __name__ == '__main__':
 
             with open(path, 'w') as f:
                 f.write(str_ + "\n")
-            print path
+            print(path)
         else:
-            print str_
+            print(str_)
 
     #  _     _     _      __                           _
     # | |   (_)   | |    / _|                         | |
@@ -151,14 +152,14 @@ if __name__ == '__main__':
     # \_____/_|___/\__| |_| \___/|_|  |_| |_| |_|\__,_|\__|___/
     elif arguments["list_formats"]:
         for i in EMSL_dump.get_list_format():
-            print i
+            print(i)
 
     #  _____                _             _ _
     # /  __ \              | |           | | |
     # | /  \/_ __ ___  __ _| |_ ___    __| | |__
     # | |   | '__/ _ \/ _` | __/ _ \  / _` | '_ \
     # | \__/\ | |  __/ (_| | ||  __/ | (_| | |_) |
-    #  \____/_|  \___|\__,_|\__\___|  \__,_|_.__/
+    # \_____/_|  \___|\__,_|\__\___|  \__,_|_.__/
     elif arguments["create_db"]:
         db_path = arguments["--db_path"]
         format = arguments["--format"]
