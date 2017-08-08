@@ -1,16 +1,18 @@
-# -*- coding: utf-8 -*-
+from __future__ import print_function
 
-import sqlite3
+import os
 import re
 import sys
-import os
+import sqlite3
 
-from misc.sqlit import connect4git
+from collections import OrderedDict
+
+from .misc.sqlit import connect4git
+
 
 def checkSQLite3(db_path):
     """Check if the db_path is a good one"""
-
-    from os.path import isfile, getsize
+    from os.path import getsize, isfile
 
     db_path = os.path.expanduser(db_path)
     db_path = os.path.expandvars(db_path)
@@ -18,22 +20,22 @@ def checkSQLite3(db_path):
 
     # Check if db file is readable
     if not os.access(db_path, os.R_OK):
-        print >>sys.stderr, "Db file %s is not readable" % (db_path)
+        print("Db file %s is not readable" % (db_path), file=sys.stderr)
         raise IOError
 
     if not isfile(db_path):
-        print >>sys.stderr, "Db file %s is not... a file!" % (db_path)
+        print("Db file %s is not... a file!" % (db_path), file=sys.stderr)
         raise IOError
 
     if getsize(db_path) < 100:  # SQLite database file header is 100 bytes
-        print >>sys.stderr, "Db file %s is not a SQLite file!" % (db_path)
+        print("Db file %s is not a SQLite file!" % (db_path), file=sys.stderr)
         raise IOError
 
     with open(db_path, 'rb') as fd:
         header = fd.read(100)
 
     if header[:16] != 'SQLite format 3\x00':
-        print >>sys.stderr, "Db file %s is not in SQLiteFormat3!" % (db_path)
+        print("Db file %s is not in SQLiteFormat3!" % (db_path), file=sys.stderr)
         raise IOError
 
     # Check if the file system allows I/O on sqlite3 (lustre)
@@ -41,8 +43,8 @@ def checkSQLite3(db_path):
     try:
         EMSL_local(db_path=db_path).list_basis_available()
     except sqlite3.OperationalError:
-        print >>sys.stderr, "I/O Error for you file system"
-        print >>sys.stderr, "Try some fixe"
+        print("I/O Error for you file system", file=sys.stderr)
+        print("Try some fix", file=sys.stderr)
         new_db_path = "/dev/shm/%d.db" % (os.getpid())
         os.system("cp %s %s" % (db_path, new_db_path))
         db_path = new_db_path
@@ -54,24 +56,24 @@ def checkSQLite3(db_path):
     try:
         EMSL_local(db_path=db_path).list_basis_available()
     except:
-        print >>sys.stderr, "Sorry..."
+        print("Sorry...", file=sys.stderr)
         os.system("rm -f /dev/shm/%d.db" % (os.getpid()))
         raise
     else:
-        print >>sys.stderr, "Working !"
+        print("Working !", file=sys.stderr)
         changed = True
         return db_path, changed
 
 
 def cond_sql_or(table_name, l_value, glob=False):
-    """Take a table_name, a list of value and create the sql 'or' commande
+    """Take a table_name, a list of value and create the sql 'or' command
        for example : (elt = "Na" OR elt = "Mg")"""
 
     opr = "GLOB" if glob else "="
 
-    l_cmd = ['{0} {1} "{2}"'.format(table_name, opr, val) for val in l_value]
+    l_cmd = ['{} {} "{}"'.format(table_name, opr, val) for val in l_value]
 
-    return "({0})".format(" OR ".join(l_cmd))
+    return "({})".format(" OR ".join(l_cmd))
 
 
 def string_to_nb_mo(str_type):
@@ -86,10 +88,11 @@ def string_to_nb_mo(str_type):
         return d[str_type]
     # ord("F") = 70 and ord("Z") = 87
     elif 70 <= ord(str_type) <= 87:
-        # ord("F") = 70 and l = 4 so ofset if 66
+        # ord("F") = 70 and l = 4 so offset if 66
         return 2 * (ord(str_type) - 66) + 1
     else:
         raise BaseException
+
 
 #  _       __
 # |_ |\/| (_  |    |   _   _  _. |
@@ -98,7 +101,7 @@ def string_to_nb_mo(str_type):
 class EMSL_local(object):
 
     """
-    All the method for using the EMSL db localy
+    All the method for using the EMSL db locally
     """
 
     def __init__(self, db_path=None, db_dump_path=None):
@@ -116,17 +119,14 @@ class EMSL_local(object):
         self.c.execute("SELECT * from format_tab")
         self.format = self.c.fetchone()[0]
 
-    def list_basis_available(self,
-                             elts=[],
-                             basis=[],
-                             average_mo_number=False):
+    def list_basis_available(self, elts=[], basis=[], average_mo_number=False):
         """
-        return all the basis name who contant all the elts
+        Return all the basis name who contain all the elts
         """
         # If not elts just get the distinct name
-        # Else: 1) fetch for geting all the run_id whos satisfy the condition
+        # Else: 1) fetch for getting all the run_id who satisfy the condition
         #       2) If average_mo_number:
-        #            * Get name,descripption,data
+        #            * Get name, description, data
         #            * Then parse it
         #          Else Get name,description
         #       3) Parse it
@@ -145,11 +145,11 @@ class EMSL_local(object):
             if not average_mo_number:
                 cmd = """SELECT DISTINCT name, description
                          FROM basis_tab
-                         WHERE {0}"""
+                         WHERE {}"""
             else:
                 cmd = """SELECT DISTINCT name, description, data
                          FROM output_tab
-                         WHERE {0}"""
+                         WHERE {}"""
 
             cmd = cmd.format(cmd_filter_basis)
 
@@ -161,7 +161,7 @@ class EMSL_local(object):
 
             str_ = """SELECT DISTINCT basis_id
                       FROM output_tab
-                      WHERE elt=? AND {0}""".format(cmd_filter_basis)
+                      WHERE elt=? AND {}""".format(cmd_filter_basis)
 
             cmd = " INTERSECT ".join([str_] * len(elts)) + ";"
             self.c.execute(cmd, elts)
@@ -179,12 +179,12 @@ class EMSL_local(object):
             if average_mo_number:
                 column_to_fech += ", data"
 
-            filter_where = " ({0}) AND ({1})".format(cmd_filter_ele,
-                                                     cmd_filter_basis)
+            filter_where = " ({}) AND ({})".format(cmd_filter_ele,
+                                                   cmd_filter_basis)
 
-            cmd = """SELECT DISTINCT {0}
+            cmd = """SELECT DISTINCT {}
                      FROM output_tab
-                     WHERE {1}
+                     WHERE {}
                      ORDER BY name""".format(column_to_fech, filter_where)
         # ~#~#~#~#~ #
         # F e t c h #
@@ -198,11 +198,10 @@ class EMSL_local(object):
         # ~#~#~#~#~#~#~ #
         # If average_mo_number is asking
 
-        from misc.collections import OrderedDict
         dict_info = OrderedDict()
         # Description : dict_info[name] = [description, nb_mo, nb_ele]
-
         from src.parser_handler import get_symmetry_function
+
         if average_mo_number:
 
             f_symmetry = get_symmetry_function(self.format)
@@ -227,7 +226,7 @@ class EMSL_local(object):
         # ~#~#~#~#~#~ #
 
         if average_mo_number:
-            return[[k, v[0], str(v[1] / v[2])] for k, v in dict_info.iteritems()]
+            return[[k, v[0], str(v[1] / v[2])] for k, v in dict_info.items()]
         else:
             return [i[:] for i in info]
 
@@ -258,9 +257,9 @@ class EMSL_local(object):
                   handle_l_format=False, check_format=None):
         """
         Return the data from the basis set
-        basis_name : The value of 'name'raw from output_tab in the SQL database
-        elts : List of element avalaible in 'elt'raw
-        handle_l_format : If you want to use special treatement for SP function
+        basis_name : The value of 'name' raw from output_tab in the SQL database
+        elts : List of element available in 'elt'raw
+        handle_l_format : If you want to use special treatment for SP function
                         (see src.parser_handler.get_handle_l_function)
         check_format : If you want to verify some condition for special program
                        (see src.parser.check_validity)
@@ -273,10 +272,10 @@ class EMSL_local(object):
         cmd_filter_ele = cond_sql_or("elt", elts) if elts else "(1)"
 
         self.c.execute('''SELECT DISTINCT data from output_tab
-                     WHERE name LIKE "{0}"
-                     AND  ({1})'''.format(basis_name, cmd_filter_ele))
+                     WHERE name LIKE "{}"
+                     AND  ({})'''.format(basis_name, cmd_filter_ele))
 
-        # We need to take i[0] because fetchall return a tuple [(value),...]
+        # We need to take i[0] because fetchall returns a tuple [(value),...]
         l_atom_basis = [i[0].strip() for i in self.c.fetchall()]
 
         # ~#~#~#~#~#~#~#~ #
@@ -284,6 +283,7 @@ class EMSL_local(object):
         # ~#~#~#~#~#~#~#~ #
         if handle_l_format:
             from src.parser_handler import get_handle_l_function
+
             f = get_handle_l_function(self.format)
             l_atom_basis = f(l_atom_basis)
 
@@ -292,24 +292,23 @@ class EMSL_local(object):
         # ~#~#~#~#~ #
 
         if check_format:
+            from src.parser_handler import (get_check_function,
+                                            get_symmetry_function)
 
-                from src.parser_handler import get_symmetry_function
-                from src.parser_handler import get_check_function
+            f = get_check_function(check_format)
+            f_symmetry = get_symmetry_function(self.format)
 
-                f = get_check_function(check_format)
-                f_symmetry = get_symmetry_function(self.format)
-
-                for atom_basis in l_atom_basis:
-                    lines = atom_basis.split("\n")
-                    for type_, _, _ in f_symmetry(lines):
-                        try:
-                            f(type_)
-                        except AssertionError:
-                            print "False. You have somme special function like SP"
-                            sys.exit(1)
-                        except BaseException:
-                            print "Fail !"
-                            sys.exit(1)
+            for atom_basis in l_atom_basis:
+                lines = atom_basis.split("\n")
+                for type_, _, _ in f_symmetry(lines):
+                    try:
+                        f(type_)
+                    except AssertionError:
+                        print("False. You have some special function like SP.")
+                        sys.exit(1)
+                    except BaseException:
+                        print("Fail !")
+                        sys.exit(1)
 
         # ~#~#~#~#~#~ #
         # R e t u r n #

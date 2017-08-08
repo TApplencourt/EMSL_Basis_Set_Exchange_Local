@@ -2,6 +2,8 @@
 # /__  _.      _  _ o  _. ._    (_| |_|_
 # \_| (_| |_| _> _> | (_| | |     |   |
 #
+from __future__ import print_function
+
 import sys
 
 
@@ -36,7 +38,7 @@ def parse_basis_data_gaussian94(data, name, description, elements, debug=True):
     if begin == -1 or end == -1:
         if debug:
             print(data)
-        str_ = " No basis set data found while attempting to process {0} ({1})"
+        str_ = " No basis set data found while attempting to process {} ({})"
         raise ValueError(str_.format(name, description))
 
     trimmed = data[begin + len(mark): end - len(mark)].strip()
@@ -70,12 +72,12 @@ def parse_basis_data_gaussian94(data, name, description, elements, debug=True):
             unused_elements.remove(symbol.upper())
         except KeyError:
             if debug:
-                msg = "Warning: already processed {0}\n".format(symbol)
+                msg = "Warning: already processed {}\n".format(symbol)
                 sys.stderr.write(msg)
         pairs.append([symbol, chunk])
 
     if unused_elements:
-        msg = "Warning: elements {0} left over for {1}".format(
+        msg = "Warning: elements {} left over for {}".format(
             list(unused_elements),
             name)
         print(msg)

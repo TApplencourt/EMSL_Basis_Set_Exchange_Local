@@ -1,16 +1,18 @@
+from __future__ import print_function
+
 import os
-import sys
 import re
+import sys
 import time
+
+from collections import OrderedDict
 
 try:
     import sqlite3
 except ImportError:
-    print "you maybe need libsqlite3-dev from the package manager"
-    print "and the recompile Python"
+    print("you maybe need libsqlite3-dev from the package manager")
+    print("and the recompile Python")
     raise
-
-from misc.collections import OrderedDict
 
 
 def install_with_pip(name):
@@ -20,32 +22,31 @@ def install_with_pip(name):
          'n': False}
 
     while True:
-        choice = raw_input('Do you want to install it ? [Y/N]')
+        choice = input('Do you want to install it ? [Y/N]')
         try:
             ins = d[choice.lower()]
             break
         except:
-            print "not a valid choice"
+            print("not a valid choice")
 
     if ins:
         try:
             import pip
+
             pip.main(['install', name])
         except:
-            print "You need pip"
-            print "(http://pip.readthedocs.org/en/latest/installing.html)"
+            print("You need pip")
+            print("(http://pip.readthedocs.org/en/latest/installing.html)")
             sys.exit(1)
 
 
 class EMSL_dump:
     """
-    This class implement all you need for download the EMSL and save it localy
+    This class implement all you need for download the EMSL and save it locally
     """
 
     def __init__(self, db_path=None, format="GAMESS-US", contraction="True"):
-
-        from src.parser_handler import get_parser_function
-        from src.parser_handler import check_format
+        from src.parser_handler import check_format, get_parser_function
 
         self.format = check_format(format)
         self.parser = get_parser_function(self.format)
@@ -55,7 +56,7 @@ class EMSL_dump:
             self.db_path = db_path
         else:
             head_path = os.path.dirname(__file__)
-            db_path = "{0}/../db/{1}.db".format(head_path, self.format)
+            db_path = "{}/../db/{}.db".format(head_path, self.format)
             self.db_path = os.path.abspath(db_path)
 
         self.contraction = str(contraction)
@@ -64,7 +65,7 @@ class EMSL_dump:
         try:
             import requests
         except:
-            print "You need the requests package"
+            print("You need the requests package")
             install_with_pip("requests")
         finally:
             self.requests = requests
@@ -73,20 +74,25 @@ class EMSL_dump:
     def get_list_format():
         """List all the format available in EMSL"""
         from src.parser_handler import parser_dict
-        return parser_dict.keys()
+
+        return list(parser_dict.keys())
 
     def dwl_basis_list_raw(self):
         """Return the source code of the iframe who contains the list of the
         basis set available
         """
 
-        print "Download all the name available in EMSL."
-        print "It can take some time.",
+        print("Download all the name available in EMSL.")
+        print("It can take some time.", end=' ')
         sys.stdout.flush()
 
         url = "https://bse.pnl.gov/bse/portal/user/anon/js_peid/11535052407933/panel/Main/template/content"
         if self.debug:
-            import cPickle as pickle
+            try:
+                import cPickle as pickle
+            except ImportError:
+                import pickle
+
             dbcache = 'db/cache'
             if not os.path.isfile(dbcache):
                 page = self.requests.get(url).text
@@ -96,12 +102,12 @@ class EMSL_dump:
         else:
             page = self.requests.get(url).text
 
-        print "Done"
+        print("Done")
         return page
 
     def basis_list_raw_to_array(self, data_raw):
         """Parse the raw html basis set to create a dict
-           will all the information for dowloanding the database :
+           will all the information for downloanding the database :
         Return d[name] = [name, xml_path, description,
                           lits of the elements available]
 
@@ -158,14 +164,14 @@ class EMSL_dump:
     #  \____/_|  \___|\__,_|\__\___|
     #
     def create_and_populate_sql(self, dict_basis_list):
-        """Create the sql from strach.
+        """Create the sql from scratch.
             Take the list of basis available data,
             download her, put her in sql"""
 
         if os.path.isfile(self.db_path):
-            print >> sys.stderr, "FAILLURE:"
-            print >> sys.stderr, "{0} file alredy exist.".format(self.db_path),
-            print >> sys.stderr, "Delete or remove it"
+            print("FAILURE:", file=sys.stderr)
+            print("{} file already exists.".format(self.db_path), end=' ', file=sys.stderr)
+            print("Delete or remove it", file=sys.stderr)
             sys.exit(1)
 
         conn = sqlite3.connect(self.db_path)
@@ -200,21 +206,26 @@ class EMSL_dump:
                 NATURAL JOIN   data_tab
                     ''')
 
-        import Queue
         import threading
+
+        # Queue change to queue in python3
+        try:
+            import queue
+        except ImportError as e:
+            import Queue as queue
 
         num_worker_threads = 7
         attemps_max = 20
 
         # All the task need to be executed
         nb_basis = len(dict_basis_list)
-        q_in = Queue.Queue(nb_basis)
+        q_in = queue.Queue(nb_basis)
         # Populate the  q_in list
-        for [name, path_xml, des, elts] in dict_basis_list.itervalues():
+        for [name, path_xml, des, elts] in dict_basis_list.values():
                 q_in.put([name, path_xml, des, elts])
 
         # All the queue who have been executed
-        q_out = Queue.Queue(num_worker_threads)
+        q_out = queue.Queue(num_worker_threads)
 
         def worker():
             """get a Job from the q_in, do stuff,
@@ -247,7 +258,7 @@ class EMSL_dump:
                     q_out.put(basis_data)
                 except:
                     if self.debug:
-                        print "Fail on q_out.put", basis_data
+                        print("Fail on q_out.put", basis_data)
                     raise
 
         # Create all the worker (q_in |> worker |> q_out)
@@ -262,8 +273,8 @@ class EMSL_dump:
             name, des, basis_data = q_out.get()
             q_out.task_done()
 
-            str_indice = '{0:>3}'.format(i + 1)
-            str_ = '{0} / {1} | {2}'.format(str_indice, nb_basis, name)
+            str_indice = '{:>3}'.format(i + 1)
+            str_ = '{} / {} | {}'.format(str_indice, nb_basis, name)
 
             # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
             # A d d _ t h e _ b a s i s _ n a m e #
@@ -273,7 +284,7 @@ class EMSL_dump:
                 c.execute(cmd, [name, des])
                 conn.commit()
             except sqlite3.IntegrityError:
-                print str_, "Fail"
+                print(str_, "Fail")
 
             # ~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~ #
             # A d d _ t h e _ b a s i s _ d a t a #
@@ -286,9 +297,9 @@ class EMSL_dump:
                 c.executemany(cmd, [id_ + k for k in basis_data])
                 conn.commit()
             except sqlite3.IntegrityError:
-                print str_, "Fail"
+                print(str_, "Fail")
             else:
-                print str_
+                print(str_)
         conn.close()
 
         q_in.join()

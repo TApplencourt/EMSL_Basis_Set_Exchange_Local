@@ -2,6 +2,8 @@
 # |\ |      /  |_   _  ._ _
 # | \| \/\/ \_ | | (/_ | | |
 #
+from __future__ import print_function
+
 import json
 
 
@@ -19,7 +21,7 @@ def extract_basis_nwchem(data, name):
     @rtype : list
     """
 
-    begin_marker = """BASIS "{0}" PRINT""".format(name)
+    begin_marker = """BASIS "{}" PRINT""".format(name)
     end_marker = "END"
 
     # search for the basis set data begin marker
@@ -72,10 +74,8 @@ def extract_ecp_nwchem(data):
     ecp_region = ""
 
     if ecp_begin > -1 and ecp_end > -1:
-        ecp_region = data[
-            ecp_begin +
-            len(ecp_begin_mark): ecp_end -
-            len(ecp_end_mark)].strip()
+        ecp_region = data[ecp_begin + len(ecp_begin_mark):
+                          ecp_end - len(ecp_end_mark)].strip()
 
     # No ECP data, so return empty list
     else:
@@ -104,7 +104,7 @@ def extract_ecp_nwchem(data):
 
 
 def unpack_nwchem_basis_block(data):
-    """Unserialize a NWChem basis data block and extract components
+    """Deserialize a NWChem basis data block and extract components
 
     @param data: a JSON of basis set data, perhaps containing many types
     @type data : str
@@ -147,7 +147,7 @@ def parse_basis_data_nwchem(data, name, description, elements, debug=True):
                 except IndexError:
                     continue
 
-        raise ValueError("Can't find element symbol in {0}".format(txt))
+        raise ValueError("Can't find element symbol in {}".format(txt))
 
     ao_chunks = extract_basis_nwchem(data, "ao basis")
     cd_chunks = extract_basis_nwchem(data, "cd basis")
@@ -155,7 +155,7 @@ def parse_basis_data_nwchem(data, name, description, elements, debug=True):
     ecp_chunks = extract_ecp_nwchem(data)
 
     if not any([ao_chunks, cd_chunks, xc_chunks, ecp_chunks]):
-        str_ = "No basis set data found while attempting to process {0} ({1})"
+        str_ = "No basis set data found while attempting to process {} ({})"
         raise ValueError(str_.format(name, description))
 
     # Tag all used elements, whether from ordinary AO basis or ECP section
@@ -167,8 +167,8 @@ def parse_basis_data_nwchem(data, name, description, elements, debug=True):
             pass
 
     if unused_elements:
-        msg = "Warning: elements {0} left over for {1}"
-        print msg.format(list(unused_elements), name)
+        msg = "Warning: elements {} left over for {}"
+        print(msg.format(list(unused_elements), name))
 
     # Form packed chunks, turn packed chunks into pairs
     used_elements = set()
@@ -219,10 +219,10 @@ def parse_basis_data_nwchem(data, name, description, elements, debug=True):
     # Assign (Symbol, Serialized) to final pairs
     pairs = []
     for idx, chunk in values:
-        symbol = extract_symbol(chunk.get("ao basis")
-                                or chunk.get("cd basis")
-                                or chunk.get("xc basis")
-                                or chunk.get("ecp"))
+        symbol = extract_symbol(chunk.get("ao basis") or
+                                chunk.get("cd basis") or
+                                chunk.get("xc basis") or
+                                chunk.get("ecp"))
         serialized = json.dumps(chunk)
         pairs.append([symbol, serialized])
     return [name, description, pairs]
